@@ -7,3 +7,5 @@
 ## Install
 `v install https://github.com/antono2/glfw`
 
+## Status
+Incomplete
