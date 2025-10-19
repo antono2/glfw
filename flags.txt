@@ -1,0 +1,26 @@
+// PICK YOUR FLAGS
+// In this configuration it's assumed `GLFW_INCLUDE` and `GLFW_LIB` environment variables are set
+
+
+// GLFW
+// https://www.glfw.org/docs/latest/vulkan_guide.html
+
+// C:\glfw-3.4.bin.WIN64\include
+// /usr/include
+#flag -I $env('GLFW_INCLUDE')
+// Windows C:\glfw-3.4.bin.WIN64\lib-mingw-w64
+// GNU/Linux /usr/lib/x86_64-linux-gnu
+#flag -L $env('GLFW_LIB')
+
+#flag linux   -lglfw
+#flag darwin  -lglfw
+#flag windows -lglfw3
+#flag windows -lgdi32
+
+// Please see https://www.glfw.org/docs/latest/build_guide.html#build_macros for more information
+//#flag windows -DGLFW_INCLUDE_GLCOREARB=1 // makes the GLFW header include the modern GL/glcorearb.h header (OpenGL/gl3.h on macOS) instead of the regular OpenGL header.
+#flag -D GLFW_INCLUDE_NONE
+//#flag -D GLFW_INCLUDE_VULKAN
+
+#include "GLFW/glfw3.h"
+
