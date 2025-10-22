@@ -8,4 +8,5 @@
 `v install https://github.com/antono2/glfw`
 
 ## Status
-Incomplete
+Incomplete<br>
+Maybe [duarteroso/glfw](https://github.com/duarteroso/glfw) will fit you more
