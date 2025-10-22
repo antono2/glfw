@@ -9,4 +9,4 @@
 
 ## Status
 Incomplete<br>
-Maybe [duarteroso/glfw](https://github.com/duarteroso/glfw) will fit you more
+Maybe [duarteroso/glfw](https://github.com/duarteroso/glfw) will fit you better
