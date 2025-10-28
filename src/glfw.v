@@ -131,6 +131,3 @@ pub fn get_window_attrib(window &Window, attrib i32) i32 {
   return C.glfwGetWindowAttrib(window, attrib)
 }
 
-
-
-
