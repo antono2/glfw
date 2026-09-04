@@ -1,7 +1,7 @@
 module glfw
 
+import glfw.c as _
 import vulkan as vk
-
 
 pub const _true = 1
 pub const _false = 0
@@ -19,12 +19,14 @@ pub const resizable = 0x00020003
 pub const iconified = 0x00020002
 
 pub type Window = C.GLFWwindow
+
 @[typedef]
-struct C.GLFWwindow{}
+struct C.GLFWwindow {}
 
 pub type Monitor = C.GLFWmonitor
+
 @[typedef]
-struct C.GLFWmonitor{}
+struct C.GLFWmonitor {}
 
 fn C.glfwInit() i32
 pub fn initialize() bool {
@@ -42,8 +44,8 @@ pub fn create_window(width i32, height i32, title string, monitor &Monitor, shar
 }
 
 fn C.glfwDestroyWindow(window &Window)
-pub fn destroy_window(window &Window){
-  C.glfwDestroyWindow(window) 
+pub fn destroy_window(window &Window) {
+	C.glfwDestroyWindow(window)
 }
 
 fn C.glfwSetWindowUserPointer(window &Window, pointer voidptr)
@@ -93,8 +95,8 @@ pub fn get_required_instance_extensions(count &u32) &&char {
 	return C.glfwGetRequiredInstanceExtensions(count)
 }
 
-fn C.glfwCreateWindowSurface(instance vk.Instance, window &Window, allocator &vk.AllocationCallbacks, surface vk.SurfaceKHR) vk.Result
-pub fn create_window_surface(instance vk.Instance, window &Window, allocator &vk.AllocationCallbacks, surface vk.SurfaceKHR) vk.Result {
+fn C.glfwCreateWindowSurface(instance vk.Instance, window &Window, allocator &vk.AllocationCallbacks, surface &vk.SurfaceKHR) vk.Result
+pub fn create_window_surface(instance vk.Instance, window &Window, allocator &vk.AllocationCallbacks, surface &vk.SurfaceKHR) vk.Result {
 	return C.glfwCreateWindowSurface(instance, window, allocator, surface)
 }
 
@@ -105,29 +107,27 @@ pub fn window_hint(hint i32, value i32) {
 
 fn C.glfwGetPhysicalDevicePresentationSupport(vk.Instance, vk.PhysicalDevice, u32) i32
 pub fn get_physical_device_presentation_support(instance vk.Instance, device vk.PhysicalDevice, queuefamily u32) bool {
-  return C.glfwGetPhysicalDevicePresentationSupport(instance, device, queuefamily) == _true
+	return C.glfwGetPhysicalDevicePresentationSupport(instance, device, queuefamily) == _true
 }
 
 fn C.glfwGetKey(&Window, i32) i32
 pub fn get_key(window &Window, key i32) i32 {
-  return C.glfwGetKey(window, key)
+	return C.glfwGetKey(window, key)
 }
 
 pub type GLFWerrorfun = fn (error_code i32, const_description &char)
 
-fn C.glfwSetErrorCallback(callback GLFWerrorfun) GLFWerrorfun 
-pub fn set_error_callback(callback GLFWerrorfun) GLFWerrorfun
-{
-  return C.glfwSetErrorCallback(callback)
+fn C.glfwSetErrorCallback(callback GLFWerrorfun) GLFWerrorfun
+pub fn set_error_callback(callback GLFWerrorfun) GLFWerrorfun {
+	return C.glfwSetErrorCallback(callback)
 }
 
 fn C.glfwGetFramebufferSize(window &Window, width &i32, height &i32)
 pub fn get_framebuffer_size(window &Window, width &i32, height &i32) {
-  C.glfwGetFramebufferSize(window, width, height)
+	C.glfwGetFramebufferSize(window, width, height)
 }
 
 fn C.glfwGetWindowAttrib(window &Window, attrib i32) i32
 pub fn get_window_attrib(window &Window, attrib i32) i32 {
-  return C.glfwGetWindowAttrib(window, attrib)
+	return C.glfwGetWindowAttrib(window, attrib)
 }
-
