@@ -15,6 +15,9 @@ jobs:
     runs-on: ubuntu-24.04
     env:
       VMODULES: ${{ github.workspace }}/modules
+      VULKAN_SDK: /usr
+      GLFW_INCLUDE: /usr/include
+      GLFW_LIB: /usr/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@v7
         with:

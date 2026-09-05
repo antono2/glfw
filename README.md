@@ -10,6 +10,7 @@ Ubuntu/Debian:
 ```bash
 sudo apt update
 sudo apt install -y build-essential libglfw3-dev libvulkan-dev
+export VULKAN_SDK=/usr
 v install https://github.com/antono2/vulkan
 ```
 
@@ -23,9 +24,9 @@ library directory must contain `glfw3.lib` for MSVC builds.
 v install https://github.com/antono2/glfw
 ```
 
-Standard Linux system paths normally need no environment overrides. For a
-non-standard GLFW installation, set `GLFW_INCLUDE` and `GLFW_LIB` before
-building the consuming application.
+For a standard 64-bit Ubuntu/Debian installation, set `GLFW_INCLUDE` to
+`/usr/include`, `GLFW_LIB` to `/usr/lib/x86_64-linux-gnu`, and `VULKAN_SDK` to
+`/usr`. Use the actual paths when libraries are installed elsewhere.
 
 ## Supported scope
 
