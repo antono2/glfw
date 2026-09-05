@@ -9,7 +9,7 @@ Ubuntu/Debian:
 
 ```bash
 sudo apt update
-sudo apt install -y build-essential libglfw3-dev libvulkan-dev
+sudo apt install -y build-essential libglfw3-dev libvulkan-dev libvulkan-volk-dev
 export VULKAN_SDK=/usr
 v install https://github.com/antono2/vulkan
 ```

@@ -27,6 +27,6 @@ jobs:
           repository: antono2/vulkan
           path: modules/vulkan
       - uses: prantlf/setup-v-action@v4
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
       - working-directory: glfw
         run: v test .
