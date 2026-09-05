@@ -1,0 +1,29 @@
+name: Test
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    env:
+      VMODULES: ${{ github.workspace }}/modules
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: glfw
+      - uses: actions/checkout@v7
+        with:
+          repository: antono2/vulkan
+          path: modules/vulkan
+      - uses: prantlf/setup-v-action@v4
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev
+      - working-directory: glfw
+        run: v test .
