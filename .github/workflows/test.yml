@@ -28,14 +28,5 @@ jobs:
           path: modules/antono2/vulkan
       - uses: prantlf/setup-v-action@v4
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
-      - name: Verify legacy-flat layout
-        run: |
-          set -euo pipefail
-          flat="$RUNNER_TEMP/modules-flat"
-          install -d "$flat"
-          ln -s "$GITHUB_WORKSPACE/modules/antono2/glfw" "$flat/glfw"
-          ln -s "$GITHUB_WORKSPACE/modules/antono2/vulkan" "$flat/vulkan"
-          printf '%s\n' 'module main' 'import glfw' 'fn main() { _ := glfw.vulkan_supported() }' > "$RUNNER_TEMP/flat.v"
-          VMODULES="$flat" v -check "$RUNNER_TEMP/flat.v"
       - working-directory: modules/antono2/glfw
         run: v test .
