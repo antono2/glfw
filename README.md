@@ -11,7 +11,7 @@ Ubuntu/Debian:
 sudo apt update
 sudo apt install -y build-essential libglfw3-dev libvulkan-dev libvulkan-volk-dev
 export VULKAN_SDK=/usr
-v install https://github.com/antono2/vulkan
+v install antono2.vulkan
 ```
 
 On Windows, install GLFW and the Vulkan SDK, then set `GLFW_INCLUDE`,
@@ -21,7 +21,7 @@ library directory must contain `glfw3.lib` for MSVC builds.
 ## Install
 
 ```bash
-v install https://github.com/antono2/glfw
+v install antono2.glfw
 ```
 
 For a standard 64-bit Ubuntu/Debian installation, set `GLFW_INCLUDE` to

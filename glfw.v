@@ -1,7 +1,7 @@
 module glfw
 
 import glfw.c as _
-import vulkan as vk
+import antono2.vulkan as vk
 
 pub const _true = 1
 pub const _false = 0
