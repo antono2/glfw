@@ -1,6 +1,6 @@
 # Focused [GLFW](https://www.glfw.org/) bindings for [V](https://vlang.io/)
 
-[Project portfolio](https://oreskin.de/projects_en.php) · [Support independent development](https://oreskin.de/dono_en.php)
+[Project portfolio](https://oreskin.de/projects_en.php)
 
 ## Dependencies
 
