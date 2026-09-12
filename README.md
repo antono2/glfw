@@ -7,6 +7,15 @@
 This module links to the system GLFW library and uses the Vulkan types from
 `antono2/vulkan`.
 
+For a fresh machine, install Vulkan, GLFW, both V modules, and run the compile
+checks with one command on Linux, macOS, or Windows:
+
+```sh
+v run setup.vsh
+```
+
+Use `v run setup.vsh --check` for a read-only diagnostic pass.
+
 Ubuntu/Debian:
 
 ```bash
