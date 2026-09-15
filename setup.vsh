@@ -75,8 +75,10 @@ fn install_glfw_windows() ! {
 	if !os.is_file(vcpkg) {
 		run(os.quoted_path(os.join_path(vcpkg_root, 'bootstrap-vcpkg.bat')))!
 	}
-	run('${os.quoted_path(vcpkg)} install glfw3:x64-windows')!
-	sdk_root := os.join_path(vcpkg_root, 'installed', 'x64-windows')
+	// Keep GLFW static while matching V/MSVC's dynamic C runtime. This produces
+	// the glfw3.lib name used by the binding without requiring a DLL on PATH.
+	run('${os.quoted_path(vcpkg)} install glfw3:x64-windows-static-md')!
+	sdk_root := os.join_path(vcpkg_root, 'installed', 'x64-windows-static-md')
 	include_dir := os.join_path(sdk_root, 'include')
 	lib_dir := os.join_path(sdk_root, 'lib')
 	os.setenv('GLFW_INCLUDE', include_dir, true)
