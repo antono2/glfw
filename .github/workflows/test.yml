@@ -73,8 +73,8 @@ jobs:
       - name: Install GLFW
         shell: pwsh
         run: |
-          vcpkg install glfw3:x64-windows
-          $Root = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed/x64-windows'
+          vcpkg install glfw3:x64-windows-static-md
+          $Root = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed/x64-windows-static-md'
           "GLFW_INCLUDE=$(Join-Path $Root 'include')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "GLFW_LIB=$(Join-Path $Root 'lib')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Verify the public setup diagnostics
