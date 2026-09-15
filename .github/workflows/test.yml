@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 jobs:
-  test:
+  linux:
     runs-on: ubuntu-24.04
     env:
       VMODULES: ${{ github.workspace }}/modules
@@ -32,3 +32,74 @@ jobs:
         run: v run setup.vsh --check
       - working-directory: modules/antono2/glfw
         run: v test .
+
+  windows:
+    runs-on: windows-2022
+    env:
+      VMODULES: ${{ github.workspace }}/modules
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: modules/antono2/glfw
+      - uses: actions/checkout@v7
+        with:
+          repository: antono2/vulkan
+          path: modules/antono2/vulkan
+      - uses: prantlf/setup-v-action@v4
+      - name: Install Vulkan SDK and SwiftShader test artifacts
+        shell: bash
+        run: bash modules/antono2/vulkan/.github/scripts/setup-vulkan-ci.sh 1.4.309.0 v1.2
+      - name: Install binding-matched Vulkan headers and Volk
+        shell: bash
+        working-directory: modules/antono2/vulkan
+        run: |
+          set -euo pipefail
+          registry_commit=$(tr -d '\r\n' < REGISTRY_COMMIT)
+          registry_checkout="$RUNNER_TEMP/Vulkan-Headers"
+          git init "$registry_checkout"
+          git -C "$registry_checkout" remote add origin https://github.com/KhronosGroup/Vulkan-Headers.git
+          git -C "$registry_checkout" fetch --depth 1 origin "$registry_commit"
+          git -C "$registry_checkout" checkout --detach FETCH_HEAD
+          cp -R "$registry_checkout/include/." "$VULKAN_SDK/include/"
+
+          volk_commit=$(tr -d '\r\n' < VOLK_COMMIT)
+          mkdir -p "$VULKAN_SDK/include/volk"
+          curl --fail --silent --show-error --location \
+            "https://raw.githubusercontent.com/zeux/volk/$volk_commit/volk.h" \
+            --output "$VULKAN_SDK/include/volk/volk.h"
+          curl --fail --silent --show-error --location \
+            "https://raw.githubusercontent.com/zeux/volk/$volk_commit/volk.c" \
+            --output "$VULKAN_SDK/include/volk/volk.c"
+      - name: Install GLFW
+        shell: pwsh
+        run: |
+          vcpkg install glfw3:x64-windows
+          $Root = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed/x64-windows'
+          "GLFW_INCLUDE=$(Join-Path $Root 'include')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          "GLFW_LIB=$(Join-Path $Root 'lib')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+      - name: Verify the public setup diagnostics
+        working-directory: modules/antono2/glfw
+        run: v run setup.vsh --check
+      - name: Test with the Microsoft C compiler
+        working-directory: modules/antono2/glfw
+        shell: pwsh
+        run: |
+          $VsWhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
+          $InstallPath = & $VsWhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $InstallPath) { throw 'Visual Studio C++ tools were not found' }
+          Import-Module (Join-Path $InstallPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
+          Enter-VsDevShell -VsInstallPath $InstallPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
+          v -cc msvc test .
+
+  test:
+    if: always()
+    needs: [linux, windows]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Verify required platforms
+        env:
+          LINUX_RESULT: ${{ needs.linux.result }}
+          WINDOWS_RESULT: ${{ needs.windows.result }}
+        run: |
+          test "$LINUX_RESULT" = success
+          test "$WINDOWS_RESULT" = success
