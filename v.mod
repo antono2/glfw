@@ -5,5 +5,5 @@ Module {
   license: 'MIT'
   author: 'Anton Oreskin'
   repo_url: 'https://github.com/antono2/glfw'
-  dependencies: ['antono2.vulkan']
+  dependencies: ['antono2.vulkan@v2.0.0']
 }

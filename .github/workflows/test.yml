@@ -19,33 +19,41 @@ jobs:
       GLFW_INCLUDE: /usr/include
       GLFW_LIB: /usr/lib/x86_64-linux-gnu
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: modules/antono2/glfw
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: antono2/vulkan
+          ref: v2.0.0
           path: modules/antono2/vulkan
-      - uses: prantlf/setup-v-action@v4
+      - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
+        with:
+          version: 0.5.2
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
       - working-directory: modules/antono2/glfw
         run: v run setup.vsh --check
       - working-directory: modules/antono2/glfw
-        run: v test .
+        run: |
+          v -cc gcc test .
+          v -cc tcc test .
 
   windows:
     runs-on: windows-2022
     env:
       VMODULES: ${{ github.workspace }}/modules
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           path: modules/antono2/glfw
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: antono2/vulkan
+          ref: v2.0.0
           path: modules/antono2/vulkan
-      - uses: prantlf/setup-v-action@v4
+      - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
+        with:
+          version: 0.5.2
       - name: Install Vulkan SDK and SwiftShader test artifacts
         shell: bash
         run: bash modules/antono2/vulkan/.github/scripts/setup-vulkan-ci.sh 1.4.309.0 v1.2
@@ -90,6 +98,38 @@ jobs:
           Import-Module (Join-Path $InstallPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
           Enter-VsDevShell -VsInstallPath $InstallPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
           v -cc msvc test .
+
+  linux-v-master:
+    name: Advisory current V master and Vulkan master
+    continue-on-error: true
+    runs-on: ubuntu-24.04
+    env:
+      VMODULES: ${{ github.workspace }}/modules
+      VULKAN_SDK: /usr
+      GLFW_INCLUDE: /usr/include
+      GLFW_LIB: /usr/lib/x86_64-linux-gnu
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: modules/antono2/glfw
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: antono2/vulkan
+          ref: master
+          path: modules/antono2/vulkan
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: vlang/v
+          ref: master
+          path: toolchain/v
+      - name: Build current V master
+        run: |
+          make -C toolchain/v
+          echo "$GITHUB_WORKSPACE/toolchain/v" >> "$GITHUB_PATH"
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
+      - name: Test with V3 and GCC
+        working-directory: modules/antono2/glfw
+        run: v -cc gcc test .
 
   test:
     if: always()
