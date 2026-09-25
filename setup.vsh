@@ -123,7 +123,7 @@ fn main() {
 	}
 	install := os.args.len == 1 || os.args[1] == '--install'
 	if install {
-		run('v install antono2.vulkan@v2.0.0') or { panic(err) }
+		run('v install antono2.vulkan@v3.2.0') or { panic(err) }
 	}
 	vulkan_setup := installed_vulkan_setup()
 	if !os.is_file(vulkan_setup) {

@@ -22,7 +22,7 @@ Ubuntu/Debian:
 sudo apt update
 sudo apt install -y build-essential libglfw3-dev libvulkan-dev libvulkan-volk-dev
 export VULKAN_SDK=/usr
-v install antono2.vulkan@v2.0.0
+v install antono2.vulkan@v3.2.0
 ```
 
 On Windows, install GLFW and the Vulkan SDK, then set `GLFW_INCLUDE`,
