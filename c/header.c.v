@@ -11,5 +11,9 @@ module c
 #flag darwin -lglfw
 #flag windows -lglfw3
 #flag windows -lgdi32
+#flag windows -lshell32
+// GLFW's Vulkan declarations need VK_VERSION_1_0; Volk needs no prototypes.
+#flag -DVK_NO_PROTOTYPES
 #flag -DGLFW_INCLUDE_NONE
+#flag -DGLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
