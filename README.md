@@ -80,39 +80,8 @@ when the linked GLFW library was built. The EGL and OSMesa modules additionally
 need their development headers; Wayland needs Wayland headers. Native handles
 are borrowed and use `voidptr` or `usize` where V has no platform type.
 
-## Binding updates
-
-`third_party/glfw3.h` and `third_party/glfw3native.h` are pinned by
-`third_party/upstream.json`, with the upstream license beside them. The generator
-verifies their hashes and checks coverage of the core and native functions:
-
-```sh
-python3 tools/generate.py --check
-python3 tools/check_abi.py --cc gcc
-```
-
-The weekly `Update GLFW` workflow checks GitHub's latest stable GLFW release,
-updates the headers and pin, regenerates the bindings, and opens a draft PR.
-Run `python3 tools/update_upstream.py` to do the same locally. Existing V names
-are retained from the committed bindings; new GLFW structs and declarations
-are discovered from the headers. There are no pinned symbol counts or type-name
-lists in the generator. Generic C-to-V ABI conversion rules still apply; if a
-new declaration cannot be represented, `UPSTREAM_UPDATE.md` records the failure
-in the draft PR for manual repair. Review ABI and ownership changes before
-merging. Keep ownership-sensitive helpers in `convenience.v`.
-
-The workflow needs the repository Actions setting **Allow GitHub Actions to
-create and approve pull requests** enabled. It requests `contents: write`,
-`pull-requests: write`, and `actions: write` for its own token. Scheduled
-workflows run from the default branch, so this workflow starts after its PR is
-merged. GitHub may disable schedules after 60 days without repository activity.
-
-Run the headless tests with the matching installed GLFW:
-
-```sh
-v test .
-```
-
 The GLFW/Vulkan example in
 [`antono2/v_imgui_examples`](https://github.com/antono2/v_imgui_examples)
 shows the binding in a graphical application.
+
+Maintainer information is in [MAINTAINING.md](MAINTAINING.md).
