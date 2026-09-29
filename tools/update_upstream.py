@@ -49,8 +49,7 @@ def main() -> None:
     if version_tuple(tag) <= version_tuple(current["version"]):
         print(f"GLFW {current['version']} is current")
         return
-    if version_tuple(tag)[0] != version_tuple(current["version"])[0]:
-        raise RuntimeError(f"GLFW {tag} changes the major version; review the upgrade manually")
+    major_change = version_tuple(tag)[0] != version_tuple(current["version"])[0]
 
     downloaded = {name: fetch(f"https://raw.githubusercontent.com/glfw/glfw/{tag}/include/GLFW/{name}") for name in HEADERS}
     header = downloaded["glfw3.h"].decode()
@@ -62,8 +61,11 @@ def main() -> None:
     PIN.write_text(json.dumps({"version": tag, "tag": tag, "headers": {name: hashlib.sha256(data).hexdigest() for name, data in downloaded.items()}}, indent=2) + "\n")
 
     result = subprocess.run([sys.executable, str(ROOT / "tools" / "generate.py")], cwd=ROOT, text=True, capture_output=True)
-    if result.returncode:
-        NOTES.write_text(f"# GLFW {tag} update needs binding work\n\nThe header and pin were updated, but generation failed:\n\n```text\n{result.stdout}{result.stderr}```\n\nResolve the unsupported declarations, regenerate, and remove this file.\n")
+    if result.returncode or major_change:
+        issue = "The major version changed and requires compatibility review.\n\n" if major_change else ""
+        if result.returncode:
+            issue += f"Generation failed:\n\n```text\n{result.stdout}{result.stderr}```\n\n"
+        NOTES.write_text(f"# GLFW {tag} update needs binding work\n\n{issue}Review the ABI and public API, regenerate if needed, and remove this file.\n")
         print(NOTES.read_text())
     else:
         NOTES.unlink(missing_ok=True)
