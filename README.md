@@ -1,75 +1,105 @@
-# Focused [GLFW](https://www.glfw.org/) bindings for [V](https://vlang.io/)
+# [GLFW](https://www.glfw.org/) bindings for [V](https://vlang.io/)
 
 [Project portfolio](https://oreskin.de/projects_en.php)
 
-## Dependencies
+The main `antono2.glfw` module covers the 124 public functions, constants,
+callback signatures, and data structures in GLFW 3.5.1's `glfw3.h`. The
+platform-specific native functions in `glfw3native.h` are provided as optional
+submodules under `native/`. The existing Vulkan-oriented API names remain
+available.
 
-This module links to the system GLFW library and uses the Vulkan types from
-`antono2/vulkan`.
+## Requirements and setup
 
-For a fresh machine, install Vulkan, GLFW, both V modules, and run the compile
-checks with one command on Linux, macOS, or Windows:
+The binding links to a GLFW **3.5.1 or later 3.x** library and headers. The
+installed library must match the selected headers. It also currently requires
+`antono2.vulkan@v3.2.0` for GLFW's Vulkan functions.
+
+Install Vulkan, build or install GLFW 3.5.1, install this V module, and run
+headless compile and runtime checks:
 
 ```sh
 v run setup.vsh
 ```
 
-Use `v run setup.vsh --check` for a read-only diagnostic pass.
+For a read-only diagnostic pass:
 
-Ubuntu/Debian:
-
-```bash
-sudo apt update
-sudo apt install -y build-essential libglfw3-dev libvulkan-dev libvulkan-volk-dev
-export VULKAN_SDK=/usr
-v install antono2.vulkan@v3.2.0
+```sh
+v run setup.vsh --check
 ```
 
-On Windows, install GLFW and the Vulkan SDK, then set `GLFW_INCLUDE`,
-`GLFW_LIB`, and `VULKAN_SDK` to their corresponding directories. The Windows
-library directory must contain `glfw3.lib` for MSVC builds.
+The installer builds GLFW 3.5.1 from its release tag on Linux and Windows;
+macOS uses Homebrew. When setting up manually, point `GLFW_INCLUDE` to the
+directory containing `GLFW/glfw3.h` and `GLFW_LIB` to the matching library
+directory. On Linux, add that library directory to `LD_LIBRARY_PATH` at run
+time. Windows MSVC builds require `glfw3.lib` in `GLFW_LIB`. `VULKAN_SDK`
+must point to a compatible Vulkan SDK.
 
-## Install
+The checked-in headers in `third_party/` are pinned inputs to the generator;
+they do not replace the installed GLFW development package at compile time.
 
-```bash
-v install antono2.glfw
+## Raw and convenience APIs
+
+The generated API follows GLFW's C signatures and snake-case names. It leaves
+GLFW-owned pointers borrowed. The handwritten convenience functions copy
+strings, monitor/video-mode data, joystick data, and Vulkan extensions into
+V-owned values, expose sizes as `Size`, and offer `create_windowed` and
+`create_window_checked` for fallible creation.
+
+```v
+import antono2.glfw
+
+glfw.init_hint(glfw.platform, glfw.platform_null) // headless example
+if !glfw.initialize() {
+    panic('GLFW initialization failed')
+}
+defer { glfw.terminate() }
+
+glfw.window_hint(glfw.client_api, glfw.no_api)
+window := glfw.create_windowed(640, 480, 'Example')!
+defer { glfw.destroy_window(window) }
+
+size := glfw.framebuffer_size(window)
+println('${size.width} × ${size.height}')
 ```
 
-For a standard 64-bit Ubuntu/Debian installation, set `GLFW_INCLUDE` to
-`/usr/include`, `GLFW_LIB` to `/usr/lib/x86_64-linux-gnu`, and `VULKAN_SDK` to
-`/usr`. Use the actual paths when libraries are installed elsewhere.
+The raw callback setters accept named V functions with the generated callback
+signature. Keep callback-owned data for only as long as GLFW documents; for
+example, copy dropped paths inside the drop callback if they must survive it.
+GLFW requires most window and event operations on the main thread.
 
-## Supported scope
+## Native access
 
-The binding provides the subset used by the ImGui and Vulkan Video examples:
+Import the relevant optional submodule: `antono2.glfw.native.x11`,
+`antono2.glfw.native.wayland`, `antono2.glfw.native.win32`,
+`antono2.glfw.native.cocoa`, `antono2.glfw.native.egl`, or
+`antono2.glfw.native.osmesa`. These expose
+all 27 `glfw3native.h` functions. Use only modules whose backends were enabled
+when the linked GLFW library was built. The EGL and OSMesa modules additionally
+need their development headers; Wayland needs Wayland headers. Native handles
+are borrowed and use `voidptr` or `usize` where V has no platform type.
 
-- GLFW initialization and termination;
-- Vulkan-compatible window creation and destruction;
-- event polling, key state/callbacks, framebuffer size, and close state;
-- required Vulkan instance extensions, presentation support, and surface
-  creation.
+## Binding updates
 
-It is not a complete GLFW binding. OpenGL context management, monitors, input
-devices, clipboard access, cursors, and most window-management functions are
-not currently wrapped.
+`third_party/glfw3.h` and `third_party/glfw3native.h` are pinned to GLFW
+3.5.1, with the upstream license beside them. The generator verifies their
+hashes and checks coverage of the core and native functions:
 
-## Example
+```sh
+python3 tools/generate.py --check
+python3 tools/check_abi.py --cc gcc
+```
 
-See the tested GLFW/Vulkan example in
-[`antono2/v_imgui_examples`](https://github.com/antono2/v_imgui_examples).
+When updating GLFW, replace the pinned headers, update the expected hashes and
+API counts in `tools/generate.py`, regenerate `glfw_generated.v`, and review the
+diff. Keep ownership-sensitive helpers in `convenience.v` rather than adding
+them to generated output.
 
-## Tests
+Run the headless tests with the matching installed GLFW:
 
-```bash
+```sh
 v test .
 ```
 
-The module smoke test compiles and links the native GLFW dependency without
-opening a window, so it is suitable for headless CI. Window creation and resize
-behavior are exercised by the ImGui demo and Vulkan Video player.
-
-## Status
-
-This focused API is sufficient for the related Vulkan projects. Applications
-needing broad GLFW coverage may prefer
-[`duarteroso/glfw`](https://github.com/duarteroso/glfw).
+The GLFW/Vulkan example in
+[`antono2/v_imgui_examples`](https://github.com/antono2/v_imgui_examples)
+shows the binding in a graphical application.

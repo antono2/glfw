@@ -16,8 +16,6 @@ jobs:
     env:
       VMODULES: ${{ github.workspace }}/modules
       VULKAN_SDK: /usr
-      GLFW_INCLUDE: /usr/include
-      GLFW_LIB: /usr/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -30,13 +28,18 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev
+      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
+      - working-directory: modules/antono2/glfw
+        run: python3 tools/generate.py --check
       - working-directory: modules/antono2/glfw
         run: v run setup.vsh --check
       - working-directory: modules/antono2/glfw
         run: |
           v -cc gcc test .
           v -cc tcc test .
+          python3 tools/check_abi.py --cc gcc
+          v -cc gcc run examples/native_linux_smoke.v
 
   windows:
     runs-on: windows-2022
@@ -81,8 +84,12 @@ jobs:
       - name: Install GLFW
         shell: pwsh
         run: |
-          vcpkg install glfw3:x64-windows-static-md
-          $Root = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed/x64-windows-static-md'
+          $Source = Join-Path $env:RUNNER_TEMP 'glfw-3.5.1-source'
+          $Root = Join-Path $env:RUNNER_TEMP 'glfw-3.5.1'
+          git clone --depth 1 --branch 3.5.1 https://github.com/glfw/glfw.git $Source
+          cmake -S $Source -B (Join-Path $Source 'build') -DCMAKE_INSTALL_PREFIX=$Root -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
+          cmake --build (Join-Path $Source 'build') --config Release --parallel
+          cmake --install (Join-Path $Source 'build') --config Release
           "GLFW_INCLUDE=$(Join-Path $Root 'include')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "GLFW_LIB=$(Join-Path $Root 'lib')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Verify the public setup diagnostics
@@ -98,6 +105,8 @@ jobs:
           Import-Module (Join-Path $InstallPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
           Enter-VsDevShell -VsInstallPath $InstallPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
           v -cc msvc test .
+          python tools/check_abi.py --cc msvc
+          v -cc msvc run examples/native_windows_smoke.v
 
   linux-v-master:
     name: Advisory current V master and Vulkan master
@@ -106,8 +115,6 @@ jobs:
     env:
       VMODULES: ${{ github.workspace }}/modules
       VULKAN_SDK: /usr
-      GLFW_INCLUDE: /usr/include
-      GLFW_LIB: /usr/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -126,7 +133,8 @@ jobs:
         run: |
           make -C toolchain/v
           echo "$GITHUB_WORKSPACE/toolchain/v" >> "$GITHUB_PATH"
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev
+      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - name: Test with V3 and GCC
         working-directory: modules/antono2/glfw
         run: v -cc gcc test .

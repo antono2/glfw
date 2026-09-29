@@ -23,30 +23,30 @@ fn run(command string) ! {
 
 fn install_glfw_linux() ! {
 	if command_exists('apt-get') {
-		run('sudo apt-get install -y libglfw3-dev')!
-		os.setenv('GLFW_INCLUDE', '/usr/include', true)
-		os.setenv('GLFW_LIB', '/usr/lib/x86_64-linux-gnu', true)
-		return
+		run('sudo apt-get install -y cmake git libglfw3-dev libwayland-dev libxkbcommon-dev wayland-protocols')!
+	} else if command_exists('dnf') {
+		run('sudo dnf install -y cmake git glfw-devel wayland-devel libxkbcommon-devel wayland-protocols-devel')!
+	} else if command_exists('pacman') {
+		run('sudo pacman -S --needed --noconfirm cmake git glfw wayland libxkbcommon wayland-protocols')!
+	} else if command_exists('zypper') {
+		run('sudo zypper --non-interactive install cmake git glfw-devel wayland-devel libxkbcommon-devel wayland-protocols-devel')!
+	} else {
+		return error('unsupported Linux package manager; install GLFW 3.5.1 and rerun with --check')
 	}
-	if command_exists('dnf') {
-		run('sudo dnf install -y glfw-devel')!
-		os.setenv('GLFW_INCLUDE', '/usr/include', true)
-		os.setenv('GLFW_LIB', '/usr/lib64', true)
-		return
+	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', '3.5.1')
+	source := os.join_path(cache_root, 'source')
+	build := os.join_path(cache_root, 'build')
+	install := os.join_path(cache_root, 'install')
+	os.mkdir_all(cache_root)!
+	if !os.is_dir(source) {
+		run('git clone --depth 1 --branch 3.5.1 https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
 	}
-	if command_exists('pacman') {
-		run('sudo pacman -S --needed --noconfirm glfw')!
-		os.setenv('GLFW_INCLUDE', '/usr/include', true)
-		os.setenv('GLFW_LIB', '/usr/lib', true)
-		return
-	}
-	if command_exists('zypper') {
-		run('sudo zypper --non-interactive install glfw-devel')!
-		os.setenv('GLFW_INCLUDE', '/usr/include', true)
-		os.setenv('GLFW_LIB', '/usr/lib64', true)
-		return
-	}
-	return error('unsupported Linux package manager; install the GLFW development package and rerun with --check')
+	run('cmake -S ${os.quoted_path(source)} -B ${os.quoted_path(build)} -DCMAKE_INSTALL_PREFIX=${os.quoted_path(install)} -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=ON')!
+	run('cmake --build ${os.quoted_path(build)} --parallel')!
+	run('cmake --install ${os.quoted_path(build)}')!
+	os.setenv('GLFW_INCLUDE', os.join_path(install, 'include'), true)
+	os.setenv('GLFW_LIB', os.join_path(install, 'lib'), true)
+	os.setenv('LD_LIBRARY_PATH', os.join_path(install, 'lib') + ':' + os.getenv('LD_LIBRARY_PATH'), true)
 }
 
 fn install_glfw_macos() ! {
@@ -65,20 +65,20 @@ fn install_glfw_windows() ! {
 	if !command_exists('git') {
 		return error('Git is required; install it with `winget install --id Git.Git`')
 	}
-	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw')
-	vcpkg_root := os.join_path(cache_root, 'vcpkg')
-	if !os.is_dir(vcpkg_root) {
+	if !command_exists('cmake') {
+		return error('CMake is required to build GLFW 3.5.1')
+	}
+	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', '3.5.1')
+	source := os.join_path(cache_root, 'source')
+	build := os.join_path(cache_root, 'build')
+	sdk_root := os.join_path(cache_root, 'install')
+	if !os.is_dir(source) {
 		os.mkdir_all(cache_root)!
-		run('git clone --depth 1 https://github.com/microsoft/vcpkg.git ${os.quoted_path(vcpkg_root)}')!
+		run('git clone --depth 1 --branch 3.5.1 https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
 	}
-	vcpkg := os.join_path(vcpkg_root, 'vcpkg.exe')
-	if !os.is_file(vcpkg) {
-		run(os.quoted_path(os.join_path(vcpkg_root, 'bootstrap-vcpkg.bat')))!
-	}
-	// Keep GLFW static while matching V/MSVC's dynamic C runtime. This produces
-	// the glfw3.lib name used by the binding without requiring a DLL on PATH.
-	run('${os.quoted_path(vcpkg)} install glfw3:x64-windows-static-md')!
-	sdk_root := os.join_path(vcpkg_root, 'installed', 'x64-windows-static-md')
+	run('cmake -S ${os.quoted_path(source)} -B ${os.quoted_path(build)} -DCMAKE_INSTALL_PREFIX=${os.quoted_path(sdk_root)} -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF')!
+	run('cmake --build ${os.quoted_path(build)} --config Release --parallel')!
+	run('cmake --install ${os.quoted_path(build)} --config Release')!
 	include_dir := os.join_path(sdk_root, 'include')
 	lib_dir := os.join_path(sdk_root, 'lib')
 	os.setenv('GLFW_INCLUDE', include_dir, true)
@@ -110,6 +110,28 @@ fn find_glfw_header() string {
 		}
 	}
 	return ''
+}
+
+fn check_glfw_header_version(path string) ! {
+	contents := os.read_file(path)!
+	mut major := -1
+	mut minor := -1
+	mut revision := -1
+	for line in contents.split_into_lines() {
+		fields := line.fields()
+		if fields.len < 3 || fields[0] != '#define' {
+			continue
+		}
+		match fields[1] {
+			'GLFW_VERSION_MAJOR' { major = fields[2].int() }
+			'GLFW_VERSION_MINOR' { minor = fields[2].int() }
+			'GLFW_VERSION_REVISION' { revision = fields[2].int() }
+			else {}
+		}
+	}
+	if major != 3 || minor < 5 || (minor == 5 && revision < 1) {
+		return error('GLFW 3.5.1 or newer 3.x headers are required; found ${major}.${minor}.${revision} at ${path}')
+	}
 }
 
 fn main() {
@@ -151,7 +173,13 @@ fn main() {
 		exit(1)
 	}
 	println('[ok]       GLFW header: ${header}')
+	check_glfw_header_version(header) or { panic(err) }
 	project_dir := os.dir(os.real_path(@FILE))
-	run('v -check-syntax ${os.quoted_path(project_dir)}') or { panic(err) }
+	run('v test ${os.quoted_path(project_dir)}') or { panic(err) }
 	println('\nGLFW/Vulkan prerequisites and compile checks are ready.')
+	if install {
+		$if linux {
+			println('For later shells, export GLFW_INCLUDE=${os.getenv('GLFW_INCLUDE')}, GLFW_LIB=${os.getenv('GLFW_LIB')}, and add GLFW_LIB to LD_LIBRARY_PATH.')
+		}
+	}
 }
