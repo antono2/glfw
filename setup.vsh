@@ -23,7 +23,7 @@ fn run(command string) ! {
 
 fn install_glfw_linux() ! {
 	if command_exists('apt-get') {
-		run('sudo apt-get install -y cmake git libglfw3-dev libwayland-dev libxkbcommon-dev wayland-protocols')!
+		run('sudo apt-get install -y cmake git libglfw3-dev libwayland-dev libxkbcommon-dev wayland-protocols libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev')!
 	} else if command_exists('dnf') {
 		run('sudo dnf install -y cmake git glfw-devel wayland-devel libxkbcommon-devel wayland-protocols-devel')!
 	} else if command_exists('pacman') {
