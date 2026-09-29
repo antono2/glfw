@@ -1,0 +1,48 @@
+name: Update GLFW
+
+on:
+  schedule:
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
+        with:
+          version: 0.5.2
+      - name: Fetch stable release and regenerate bindings
+        run: python3 tools/update_upstream.py
+      - name: Open or refresh update PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain)" ]; then
+            echo 'No new GLFW release.'
+            exit 0
+          fi
+          branch=automation/glfw-upstream
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
+            git fetch origin "$branch:refs/remotes/origin/$branch"
+          fi
+          git checkout -B "$branch"
+          git add -A
+          git commit -m "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')"
+          git push --force-with-lease origin "$branch"
+          if ! gh pr list --head "$branch" --state open --json number --jq '.[0].number' | grep -q '^[0-9]'; then
+            gh pr create --draft --base "$DEFAULT_BRANCH" --head "$branch" \
+              --title "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')" \
+              --body 'Automated upstream header and binding update. Review ABI and convenience behavior before merging. If UPSTREAM_UPDATE.md exists, generation needs manual work.'
+          fi
+          gh workflow run test.yml --ref "$branch"

@@ -16,8 +16,6 @@ jobs:
     env:
       VMODULES: ${{ github.workspace }}/modules
       VULKAN_SDK: /usr
-      GLFW_INCLUDE: /usr/include
-      GLFW_LIB: /usr/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -30,13 +28,18 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
+      - working-directory: modules/antono2/glfw
+        run: python3 tools/generate.py --check
       - working-directory: modules/antono2/glfw
         run: v run setup.vsh --check
       - working-directory: modules/antono2/glfw
         run: |
           v -cc gcc test .
           v -cc tcc test .
+          python3 tools/check_abi.py --cc gcc
+          v -cc gcc run examples/native_linux_smoke.v
 
   windows:
     runs-on: windows-2022
@@ -81,8 +84,13 @@ jobs:
       - name: Install GLFW
         shell: pwsh
         run: |
-          vcpkg install glfw3:x64-windows-static-md
-          $Root = Join-Path $env:VCPKG_INSTALLATION_ROOT 'installed/x64-windows-static-md'
+          $Version = (Get-Content modules/antono2/glfw/third_party/upstream.json | ConvertFrom-Json).version
+          $Source = Join-Path $env:RUNNER_TEMP "glfw-$Version-source"
+          $Root = Join-Path $env:RUNNER_TEMP "glfw-$Version"
+          git clone --depth 1 --branch $Version https://github.com/glfw/glfw.git $Source
+          cmake -S $Source -B (Join-Path $Source 'build') "-DCMAKE_INSTALL_PREFIX=$Root" -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
+          cmake --build (Join-Path $Source 'build') --config Release --parallel
+          cmake --install (Join-Path $Source 'build') --config Release
           "GLFW_INCLUDE=$(Join-Path $Root 'include')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           "GLFW_LIB=$(Join-Path $Root 'lib')" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - name: Verify the public setup diagnostics
@@ -98,6 +106,34 @@ jobs:
           Import-Module (Join-Path $InstallPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
           Enter-VsDevShell -VsInstallPath $InstallPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
           v -cc msvc test .
+          python tools/check_abi.py --cc msvc
+          v -cc msvc run examples/native_windows_smoke.v
+
+  macos:
+    runs-on: macos-15
+    env:
+      VMODULES: ${{ github.workspace }}/modules
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: modules/antono2/glfw
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: antono2/vulkan
+          ref: v3.2.0
+          path: modules/antono2/vulkan
+      - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
+        with:
+          version: 0.5.2
+      - run: brew install vulkan-loader
+      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-macos.sh
+      - working-directory: modules/antono2/glfw
+        run: |
+          python3 tools/generate.py --check
+          v run setup.vsh --check
+          v -cc clang test .
+          python3 tools/check_abi.py --cc clang
+          v -cc clang run examples/native_macos_smoke.v
 
   linux-v-master:
     name: Advisory current V master and Vulkan master
@@ -106,8 +142,6 @@ jobs:
     env:
       VMODULES: ${{ github.workspace }}/modules
       VULKAN_SDK: /usr
-      GLFW_INCLUDE: /usr/include
-      GLFW_LIB: /usr/lib/x86_64-linux-gnu
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -126,20 +160,23 @@ jobs:
         run: |
           make -C toolchain/v
           echo "$GITHUB_WORKSPACE/toolchain/v" >> "$GITHUB_PATH"
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - name: Test with V3 and GCC
         working-directory: modules/antono2/glfw
         run: v -cc gcc test .
 
   test:
     if: always()
-    needs: [linux, windows]
+    needs: [linux, windows, macos]
     runs-on: ubuntu-24.04
     steps:
       - name: Verify required platforms
         env:
           LINUX_RESULT: ${{ needs.linux.result }}
           WINDOWS_RESULT: ${{ needs.windows.result }}
+          MACOS_RESULT: ${{ needs.macos.result }}
         run: |
           test "$LINUX_RESULT" = success
           test "$WINDOWS_RESULT" = success
+          test "$MACOS_RESULT" = success

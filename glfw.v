@@ -58,11 +58,15 @@ pub fn get_user_pointer(window &Window) voidptr {
 	return C.glfwGetWindowUserPointer(window)
 }
 
+pub fn get_window_user_pointer(window &Window) voidptr {
+	return get_user_pointer(window)
+}
+
 pub type GLFWFnKey = fn (window &Window, key_id i32, scan_code i32, action i32, bit_filed i32)
 
-fn C.glfwSetKeyCallback(window &Window, callback GLFWFnKey)
-pub fn set_key_callback(window &Window, callback GLFWFnKey) {
-	C.glfwSetKeyCallback(window, callback)
+fn C.glfwSetKeyCallback(window &Window, callback GLFWFnKey) GLFWFnKey
+pub fn set_key_callback(window &Window, callback GLFWFnKey) GLFWFnKey {
+	return C.glfwSetKeyCallback(window, callback)
 }
 
 fn C.glfwMakeContextCurrent(window &Window)
@@ -78,6 +82,10 @@ pub fn vulkan_supported() bool {
 fn C.glfwSetWindowShouldClose(window &Window, value i32)
 pub fn set_should_close(window &Window, flag i32) {
 	C.glfwSetWindowShouldClose(window, flag)
+}
+
+pub fn set_window_should_close(window &Window, flag i32) {
+	set_should_close(window, flag)
 }
 
 fn C.glfwWindowShouldClose(window &Window) i32

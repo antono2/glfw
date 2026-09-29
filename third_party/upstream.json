@@ -1,0 +1,8 @@
+{
+  "version": "3.5.1",
+  "tag": "3.5.1",
+  "headers": {
+    "glfw3.h": "95ecc16e4875bca18cff863232d5dbb623f3457b05f07efd26fe8bc8a06345b6",
+    "glfw3native.h": "d301085c2a998345c0f80127d8e67d4394f1c7b12ca9c2cf3b73b7fa15c804ae"
+  }
+}

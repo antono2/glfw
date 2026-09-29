@@ -1,75 +1,118 @@
-# Focused [GLFW](https://www.glfw.org/) bindings for [V](https://vlang.io/)
+# [GLFW](https://www.glfw.org/) bindings for [V](https://vlang.io/)
 
 [Project portfolio](https://oreskin.de/projects_en.php)
 
-## Dependencies
+The main `antono2.glfw` module covers the public functions, constants,
+callback signatures, and data structures in the pinned GLFW `glfw3.h`. The
+platform-specific native functions in `glfw3native.h` are provided as optional
+submodules under `native/`. The existing Vulkan-oriented API names remain
+available.
 
-This module links to the system GLFW library and uses the Vulkan types from
-`antono2/vulkan`.
+## Requirements and setup
 
-For a fresh machine, install Vulkan, GLFW, both V modules, and run the compile
-checks with one command on Linux, macOS, or Windows:
+The binding links to a GLFW library and headers at least as new as the version
+in `third_party/upstream.json`, within the same major release. The
+installed library must match the selected headers. It also currently requires
+`antono2.vulkan@v3.2.0` for GLFW's Vulkan functions.
+
+Install Vulkan, build or install the pinned GLFW release, install this V module, and run
+setup checks. Linux and macOS run headless tests; Windows checks syntax here
+and runs linked MSVC tests in CI:
 
 ```sh
 v run setup.vsh
 ```
 
-Use `v run setup.vsh --check` for a read-only diagnostic pass.
+For a read-only diagnostic pass:
 
-Ubuntu/Debian:
-
-```bash
-sudo apt update
-sudo apt install -y build-essential libglfw3-dev libvulkan-dev libvulkan-volk-dev
-export VULKAN_SDK=/usr
-v install antono2.vulkan@v3.2.0
+```sh
+v run setup.vsh --check
 ```
 
-On Windows, install GLFW and the Vulkan SDK, then set `GLFW_INCLUDE`,
-`GLFW_LIB`, and `VULKAN_SDK` to their corresponding directories. The Windows
-library directory must contain `glfw3.lib` for MSVC builds.
+The installer builds the pinned GLFW release from its tag on Linux, macOS,
+and Windows. When setting up manually, point `GLFW_INCLUDE` to the
+directory containing `GLFW/glfw3.h` and `GLFW_LIB` to the matching library
+directory. On Linux, add that library directory to `LD_LIBRARY_PATH` at run
+time. Windows MSVC builds require `glfw3.lib` in `GLFW_LIB`. `VULKAN_SDK`
+must point to a compatible Vulkan SDK.
 
-## Install
+The checked-in headers in `third_party/` are pinned inputs to the generator;
+they do not replace the installed GLFW development package at compile time.
 
-```bash
-v install antono2.glfw
+## Raw and convenience APIs
+
+The generated API follows GLFW's C signatures and snake-case names. It leaves
+GLFW-owned pointers borrowed. The handwritten convenience functions copy
+strings, monitor/video-mode data, joystick data, and Vulkan extensions into
+V-owned values, expose sizes as `Size`, and offer `create_windowed` and
+`create_window_checked` for fallible creation.
+
+```v
+import antono2.glfw
+
+glfw.init_hint(glfw.platform, glfw.platform_null) // headless example
+if !glfw.initialize() {
+    panic('GLFW initialization failed')
+}
+defer { glfw.terminate() }
+
+glfw.window_hint(glfw.client_api, glfw.no_api)
+window := glfw.create_windowed(640, 480, 'Example')!
+defer { glfw.destroy_window(window) }
+
+size := glfw.framebuffer_size(window)
+println('${size.width} × ${size.height}')
 ```
 
-For a standard 64-bit Ubuntu/Debian installation, set `GLFW_INCLUDE` to
-`/usr/include`, `GLFW_LIB` to `/usr/lib/x86_64-linux-gnu`, and `VULKAN_SDK` to
-`/usr`. Use the actual paths when libraries are installed elsewhere.
+The raw callback setters accept named V functions with the generated callback
+signature. Keep callback-owned data for only as long as GLFW documents; for
+example, copy dropped paths inside the drop callback if they must survive it.
+GLFW requires most window and event operations on the main thread.
 
-## Supported scope
+## Native access
 
-The binding provides the subset used by the ImGui and Vulkan Video examples:
+Import the relevant optional submodule: `antono2.glfw.native.x11`,
+`antono2.glfw.native.wayland`, `antono2.glfw.native.win32`,
+`antono2.glfw.native.cocoa`, `antono2.glfw.native.egl`, or
+`antono2.glfw.native.osmesa`. These expose
+the native functions in the pinned `glfw3native.h`. Use only modules whose backends were enabled
+when the linked GLFW library was built. The EGL and OSMesa modules additionally
+need their development headers; Wayland needs Wayland headers. Native handles
+are borrowed and use `voidptr` or `usize` where V has no platform type.
 
-- GLFW initialization and termination;
-- Vulkan-compatible window creation and destruction;
-- event polling, key state/callbacks, framebuffer size, and close state;
-- required Vulkan instance extensions, presentation support, and surface
-  creation.
+## Binding updates
 
-It is not a complete GLFW binding. OpenGL context management, monitors, input
-devices, clipboard access, cursors, and most window-management functions are
-not currently wrapped.
+`third_party/glfw3.h` and `third_party/glfw3native.h` are pinned by
+`third_party/upstream.json`, with the upstream license beside them. The generator
+verifies their hashes and checks coverage of the core and native functions:
 
-## Example
+```sh
+python3 tools/generate.py --check
+python3 tools/check_abi.py --cc gcc
+```
 
-See the tested GLFW/Vulkan example in
-[`antono2/v_imgui_examples`](https://github.com/antono2/v_imgui_examples).
+The weekly `Update GLFW` workflow checks GitHub's latest stable GLFW release,
+updates the headers and pin, regenerates the bindings, and opens a draft PR.
+Run `python3 tools/update_upstream.py` to do the same locally. Existing V names
+are retained from the committed bindings; new GLFW structs and declarations
+are discovered from the headers. There are no pinned symbol counts or type-name
+lists in the generator. Generic C-to-V ABI conversion rules still apply; if a
+new declaration cannot be represented, `UPSTREAM_UPDATE.md` records the failure
+in the draft PR for manual repair. Review ABI and ownership changes before
+merging. Keep ownership-sensitive helpers in `convenience.v`.
 
-## Tests
+The workflow needs the repository Actions setting **Allow GitHub Actions to
+create and approve pull requests** enabled. It requests `contents: write`,
+`pull-requests: write`, and `actions: write` for its own token. Scheduled
+workflows run from the default branch, so this workflow starts after its PR is
+merged. GitHub may disable schedules after 60 days without repository activity.
 
-```bash
+Run the headless tests with the matching installed GLFW:
+
+```sh
 v test .
 ```
 
-The module smoke test compiles and links the native GLFW dependency without
-opening a window, so it is suitable for headless CI. Window creation and resize
-behavior are exercised by the ImGui demo and Vulkan Video player.
-
-## Status
-
-This focused API is sufficient for the related Vulkan projects. Applications
-needing broad GLFW coverage may prefer
-[`duarteroso/glfw`](https://github.com/duarteroso/glfw).
+The GLFW/Vulkan example in
+[`antono2/v_imgui_examples`](https://github.com/antono2/v_imgui_examples)
+shows the binding in a graphical application.
