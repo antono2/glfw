@@ -13,5 +13,6 @@ cmake --install "$source/build"
 {
   echo "GLFW_INCLUDE=$prefix/include"
   echo "GLFW_LIB=$prefix/lib"
+  echo "DYLD_LIBRARY_PATH=$prefix/lib"
   echo "VULKAN_SDK=$(brew --prefix vulkan-loader)"
 } >> "$GITHUB_ENV"

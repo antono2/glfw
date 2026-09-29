@@ -79,6 +79,7 @@ fn install_glfw_macos() ! {
 	run('cmake --install ${os.quoted_path(build)}')!
 	os.setenv('GLFW_INCLUDE', os.join_path(install, 'include'), true)
 	os.setenv('GLFW_LIB', os.join_path(install, 'lib'), true)
+	os.setenv('DYLD_LIBRARY_PATH', os.join_path(install, 'lib') + ':' + os.getenv('DYLD_LIBRARY_PATH'), true)
 }
 
 fn install_glfw_windows() ! {
