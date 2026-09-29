@@ -2,19 +2,20 @@
 
 [Project portfolio](https://oreskin.de/projects_en.php)
 
-The main `antono2.glfw` module covers the 124 public functions, constants,
-callback signatures, and data structures in GLFW 3.5.1's `glfw3.h`. The
+The main `antono2.glfw` module covers the public functions, constants,
+callback signatures, and data structures in the pinned GLFW `glfw3.h`. The
 platform-specific native functions in `glfw3native.h` are provided as optional
 submodules under `native/`. The existing Vulkan-oriented API names remain
 available.
 
 ## Requirements and setup
 
-The binding links to a GLFW **3.5.1 or later 3.x** library and headers. The
+The binding links to a GLFW library and headers at least as new as the version
+in `third_party/upstream.json`, within the same major release. The
 installed library must match the selected headers. It also currently requires
 `antono2.vulkan@v3.2.0` for GLFW's Vulkan functions.
 
-Install Vulkan, build or install GLFW 3.5.1, install this V module, and run
+Install Vulkan, build or install the pinned GLFW release, install this V module, and run
 setup checks. Linux and macOS run headless tests; Windows checks syntax here
 and runs linked MSVC tests in CI:
 
@@ -28,8 +29,8 @@ For a read-only diagnostic pass:
 v run setup.vsh --check
 ```
 
-The installer builds GLFW 3.5.1 from its release tag on Linux and Windows;
-macOS uses Homebrew. When setting up manually, point `GLFW_INCLUDE` to the
+The installer builds the pinned GLFW release from its tag on Linux, macOS,
+and Windows. When setting up manually, point `GLFW_INCLUDE` to the
 directory containing `GLFW/glfw3.h` and `GLFW_LIB` to the matching library
 directory. On Linux, add that library directory to `LD_LIBRARY_PATH` at run
 time. Windows MSVC builds require `glfw3.lib` in `GLFW_LIB`. `VULKAN_SDK`
@@ -74,26 +75,37 @@ Import the relevant optional submodule: `antono2.glfw.native.x11`,
 `antono2.glfw.native.wayland`, `antono2.glfw.native.win32`,
 `antono2.glfw.native.cocoa`, `antono2.glfw.native.egl`, or
 `antono2.glfw.native.osmesa`. These expose
-all 27 `glfw3native.h` functions. Use only modules whose backends were enabled
+the native functions in the pinned `glfw3native.h`. Use only modules whose backends were enabled
 when the linked GLFW library was built. The EGL and OSMesa modules additionally
 need their development headers; Wayland needs Wayland headers. Native handles
 are borrowed and use `voidptr` or `usize` where V has no platform type.
 
 ## Binding updates
 
-`third_party/glfw3.h` and `third_party/glfw3native.h` are pinned to GLFW
-3.5.1, with the upstream license beside them. The generator verifies their
-hashes and checks coverage of the core and native functions:
+`third_party/glfw3.h` and `third_party/glfw3native.h` are pinned by
+`third_party/upstream.json`, with the upstream license beside them. The generator
+verifies their hashes and checks coverage of the core and native functions:
 
 ```sh
 python3 tools/generate.py --check
 python3 tools/check_abi.py --cc gcc
 ```
 
-When updating GLFW, replace the pinned headers, update the expected hashes and
-API counts in `tools/generate.py`, regenerate `glfw_generated.v`, and review the
-diff. Keep ownership-sensitive helpers in `convenience.v` rather than adding
-them to generated output.
+The weekly `Update GLFW` workflow checks GitHub's latest stable GLFW release,
+updates the headers and pin, regenerates the bindings, and opens a draft PR.
+Run `python3 tools/update_upstream.py` to do the same locally. Existing V names
+are retained from the committed bindings; new GLFW structs and declarations
+are discovered from the headers. There are no pinned symbol counts or type-name
+lists in the generator. Generic C-to-V ABI conversion rules still apply; if a
+new declaration cannot be represented, `UPSTREAM_UPDATE.md` records the failure
+in the draft PR for manual repair. Review ABI and ownership changes before
+merging. Keep ownership-sensitive helpers in `convenience.v`.
+
+The workflow needs the repository Actions setting **Allow GitHub Actions to
+create and approve pull requests** enabled. It requests `contents: write`,
+`pull-requests: write`, and `actions: write` for its own token. Scheduled
+workflows run from the default branch, so this workflow starts after its PR is
+merged. GitHub may disable schedules after 60 days without repository activity.
 
 Run the headless tests with the matching installed GLFW:
 

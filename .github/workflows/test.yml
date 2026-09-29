@@ -84,9 +84,10 @@ jobs:
       - name: Install GLFW
         shell: pwsh
         run: |
-          $Source = Join-Path $env:RUNNER_TEMP 'glfw-3.5.1-source'
-          $Root = Join-Path $env:RUNNER_TEMP 'glfw-3.5.1'
-          git clone --depth 1 --branch 3.5.1 https://github.com/glfw/glfw.git $Source
+          $Version = (Get-Content modules/antono2/glfw/third_party/upstream.json | ConvertFrom-Json).version
+          $Source = Join-Path $env:RUNNER_TEMP "glfw-$Version-source"
+          $Root = Join-Path $env:RUNNER_TEMP "glfw-$Version"
+          git clone --depth 1 --branch $Version https://github.com/glfw/glfw.git $Source
           cmake -S $Source -B (Join-Path $Source 'build') "-DCMAKE_INSTALL_PREFIX=$Root" -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF
           cmake --build (Join-Path $Source 'build') --config Release --parallel
           cmake --install (Join-Path $Source 'build') --config Release
@@ -124,12 +125,8 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
-      - run: brew install glfw vulkan-loader
-      - run: |
-          prefix=$(brew --prefix glfw)
-          echo "GLFW_INCLUDE=$prefix/include" >> "$GITHUB_ENV"
-          echo "GLFW_LIB=$prefix/lib" >> "$GITHUB_ENV"
-          echo "VULKAN_SDK=$(brew --prefix vulkan-loader)" >> "$GITHUB_ENV"
+      - run: brew install vulkan-loader
+      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-macos.sh
       - working-directory: modules/antono2/glfw
         run: |
           python3 tools/generate.py --check

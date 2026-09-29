@@ -4,6 +4,16 @@
 // module. Running without arguments installs; --check is read-only.
 
 import os
+fn glfw_version() string {
+	contents := os.read_file(os.join_path(os.dir(os.real_path(@FILE)), 'third_party', 'upstream.json')) or { panic(err) }
+	for line in contents.split_into_lines() {
+		entry := line.trim_space()
+		if entry.starts_with('"version":') {
+			return entry.all_after(':').trim_space().trim('" ,')
+		}
+	}
+	panic('third_party/upstream.json has no version')
+}
 
 fn command_exists(name string) bool {
 	os.find_abs_path_of_executable(name) or { return false }
@@ -31,15 +41,15 @@ fn install_glfw_linux() ! {
 	} else if command_exists('zypper') {
 		run('sudo zypper --non-interactive install cmake git glfw-devel wayland-devel libxkbcommon-devel wayland-protocols-devel')!
 	} else {
-		return error('unsupported Linux package manager; install GLFW 3.5.1 and rerun with --check')
+		return error('unsupported Linux package manager; install GLFW ${glfw_version()} and rerun with --check')
 	}
-	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', '3.5.1')
+	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', glfw_version())
 	source := os.join_path(cache_root, 'source')
 	build := os.join_path(cache_root, 'build')
 	install := os.join_path(cache_root, 'install')
 	os.mkdir_all(cache_root)!
 	if !os.is_dir(source) {
-		run('git clone --depth 1 --branch 3.5.1 https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
+		run('git clone --depth 1 --branch ${glfw_version()} https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
 	}
 	run('cmake -S ${os.quoted_path(source)} -B ${os.quoted_path(build)} -DCMAKE_INSTALL_PREFIX=${os.quoted_path(install)} -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF -DGLFW_BUILD_WAYLAND=ON')!
 	run('cmake --build ${os.quoted_path(build)} --parallel')!
@@ -53,12 +63,22 @@ fn install_glfw_macos() ! {
 	if !command_exists('brew') {
 		return error('Homebrew is required for automatic GLFW setup: https://brew.sh')
 	}
-	run('brew install glfw')!
-	prefix := os.execute('brew --prefix glfw')
-	if prefix.exit_code == 0 {
-		os.setenv('GLFW_INCLUDE', os.join_path(prefix.output.trim_space(), 'include'), true)
-		os.setenv('GLFW_LIB', os.join_path(prefix.output.trim_space(), 'lib'), true)
+	if !command_exists('cmake') {
+		run('brew install cmake')!
 	}
+	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', glfw_version())
+	source := os.join_path(cache_root, 'source')
+	build := os.join_path(cache_root, 'build')
+	install := os.join_path(cache_root, 'install')
+	if !os.is_dir(source) {
+		os.mkdir_all(cache_root)!
+		run('git clone --depth 1 --branch ${glfw_version()} https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
+	}
+	run('cmake -S ${os.quoted_path(source)} -B ${os.quoted_path(build)} -DCMAKE_INSTALL_PREFIX=${os.quoted_path(install)} -DBUILD_SHARED_LIBS=ON -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF')!
+	run('cmake --build ${os.quoted_path(build)} --parallel')!
+	run('cmake --install ${os.quoted_path(build)}')!
+	os.setenv('GLFW_INCLUDE', os.join_path(install, 'include'), true)
+	os.setenv('GLFW_LIB', os.join_path(install, 'lib'), true)
 }
 
 fn install_glfw_windows() ! {
@@ -66,15 +86,15 @@ fn install_glfw_windows() ! {
 		return error('Git is required; install it with `winget install --id Git.Git`')
 	}
 	if !command_exists('cmake') {
-		return error('CMake is required to build GLFW 3.5.1')
+		return error('CMake is required to build GLFW ${glfw_version()}')
 	}
-	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', '3.5.1')
+	cache_root := os.join_path(os.cache_dir(), 'antono2', 'glfw', glfw_version())
 	source := os.join_path(cache_root, 'source')
 	build := os.join_path(cache_root, 'build')
 	sdk_root := os.join_path(cache_root, 'install')
 	if !os.is_dir(source) {
 		os.mkdir_all(cache_root)!
-		run('git clone --depth 1 --branch 3.5.1 https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
+		run('git clone --depth 1 --branch ${glfw_version()} https://github.com/glfw/glfw.git ${os.quoted_path(source)}')!
 	}
 	run('cmake -S ${os.quoted_path(source)} -B ${os.quoted_path(build)} -DCMAKE_INSTALL_PREFIX=${os.quoted_path(sdk_root)} -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL -DGLFW_BUILD_EXAMPLES=OFF -DGLFW_BUILD_TESTS=OFF -DGLFW_BUILD_DOCS=OFF')!
 	run('cmake --build ${os.quoted_path(build)} --config Release --parallel')!
@@ -129,8 +149,9 @@ fn check_glfw_header_version(path string) ! {
 			else {}
 		}
 	}
-	if major != 3 || minor < 5 || (minor == 5 && revision < 1) {
-		return error('GLFW 3.5.1 or newer 3.x headers are required; found ${major}.${minor}.${revision} at ${path}')
+	required := glfw_version().split('.').map(it.int())
+	if required.len != 3 || major != required[0] || minor < required[1] || (minor == required[1] && revision < required[2]) {
+		return error('GLFW ${glfw_version()} or newer compatible headers are required; found ${major}.${minor}.${revision} at ${path}')
 	}
 }
 
