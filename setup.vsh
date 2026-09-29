@@ -175,7 +175,13 @@ fn main() {
 	println('[ok]       GLFW header: ${header}')
 	check_glfw_header_version(header) or { panic(err) }
 	project_dir := os.dir(os.real_path(@FILE))
-	run('v test ${os.quoted_path(project_dir)}') or { panic(err) }
+	$if windows {
+		// The installed glfw3.lib is built for MSVC, while V defaults to TCC/GCC.
+		// CI runs the linked tests from a configured Visual Studio environment.
+		run('v -check-syntax ${os.quoted_path(project_dir)}') or { panic(err) }
+	} $else {
+		run('v test ${os.quoted_path(project_dir)}') or { panic(err) }
+	}
 	println('\nGLFW/Vulkan prerequisites and compile checks are ready.')
 	if install {
 		$if linux {

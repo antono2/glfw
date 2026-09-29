@@ -15,7 +15,8 @@ installed library must match the selected headers. It also currently requires
 `antono2.vulkan@v3.2.0` for GLFW's Vulkan functions.
 
 Install Vulkan, build or install GLFW 3.5.1, install this V module, and run
-headless compile and runtime checks:
+setup checks. Linux and macOS run headless tests; Windows checks syntax here
+and runs linked MSVC tests in CI:
 
 ```sh
 v run setup.vsh
