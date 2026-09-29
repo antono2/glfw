@@ -108,6 +108,36 @@ jobs:
           python tools/check_abi.py --cc msvc
           v -cc msvc run examples/native_windows_smoke.v
 
+  macos:
+    runs-on: macos-15
+    env:
+      VMODULES: ${{ github.workspace }}/modules
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: modules/antono2/glfw
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: antono2/vulkan
+          ref: v3.2.0
+          path: modules/antono2/vulkan
+      - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
+        with:
+          version: 0.5.2
+      - run: brew install glfw vulkan-loader
+      - run: |
+          prefix=$(brew --prefix glfw)
+          echo "GLFW_INCLUDE=$prefix/include" >> "$GITHUB_ENV"
+          echo "GLFW_LIB=$prefix/lib" >> "$GITHUB_ENV"
+          echo "VULKAN_SDK=$(brew --prefix vulkan-loader)" >> "$GITHUB_ENV"
+      - working-directory: modules/antono2/glfw
+        run: |
+          python3 tools/generate.py --check
+          v run setup.vsh --check
+          v -cc clang test .
+          python3 tools/check_abi.py --cc clang
+          v -cc clang run examples/native_macos_smoke.v
+
   linux-v-master:
     name: Advisory current V master and Vulkan master
     continue-on-error: true
@@ -141,13 +171,15 @@ jobs:
 
   test:
     if: always()
-    needs: [linux, windows]
+    needs: [linux, windows, macos]
     runs-on: ubuntu-24.04
     steps:
       - name: Verify required platforms
         env:
           LINUX_RESULT: ${{ needs.linux.result }}
           WINDOWS_RESULT: ${{ needs.windows.result }}
+          MACOS_RESULT: ${{ needs.macos.result }}
         run: |
           test "$LINUX_RESULT" = success
           test "$WINDOWS_RESULT" = success
+          test "$MACOS_RESULT" = success
