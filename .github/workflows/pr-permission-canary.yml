@@ -1,0 +1,22 @@
+name: Temporary PR permission canary
+
+on:
+  push:
+    branches: [automation/glfw-pr-permission-canary-20260930]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  create-pr:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Create temporary draft PR with GITHUB_TOKEN
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create --repo "$GITHUB_REPOSITORY" --draft \
+            --base master --head "$GITHUB_REF_NAME" \
+            --title 'Temporary Actions PR permission check' \
+            --body 'Temporary canary to verify the GLFW updater can create PRs. This PR will be closed and its branch deleted.'
