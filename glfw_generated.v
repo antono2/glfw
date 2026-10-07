@@ -389,652 +389,571 @@ pub:
 
 // Raw callback signatures. Register named functions with C-compatible lifetimes.
 pub type GLFWglproc = fn ()
+
 pub type GLFWvkproc = fn ()
+
 pub type GLFWallocatefun = fn (arg0 usize, arg1 voidptr) voidptr
+
 pub type GLFWreallocatefun = fn (arg0 voidptr, arg1 usize, arg2 voidptr) voidptr
+
 pub type GLFWdeallocatefun = fn (arg0 voidptr, arg1 voidptr)
+
 pub type GLFWwindowposfun = fn (arg0 &Window, arg1 i32, arg2 i32)
+
 pub type GLFWwindowsizefun = fn (arg0 &Window, arg1 i32, arg2 i32)
+
 pub type GLFWwindowclosefun = fn (arg0 &Window)
+
 pub type GLFWwindowrefreshfun = fn (arg0 &Window)
+
 pub type GLFWwindowfocusfun = fn (arg0 &Window, arg1 i32)
+
 pub type GLFWwindowiconifyfun = fn (arg0 &Window, arg1 i32)
+
 pub type GLFWwindowmaximizefun = fn (arg0 &Window, arg1 i32)
+
 pub type GLFWframebuffersizefun = fn (arg0 &Window, arg1 i32, arg2 i32)
+
 pub type GLFWwindowcontentscalefun = fn (arg0 &Window, arg1 f32, arg2 f32)
+
 pub type GLFWmousebuttonfun = fn (arg0 &Window, arg1 i32, arg2 i32, arg3 i32)
+
 pub type GLFWcursorposfun = fn (arg0 &Window, arg1 f64, arg2 f64)
+
 pub type GLFWcursorenterfun = fn (arg0 &Window, arg1 i32)
+
 pub type GLFWscrollfun = fn (arg0 &Window, arg1 f64, arg2 f64)
+
 pub type GLFWkeyfun = fn (arg0 &Window, arg1 i32, arg2 i32, arg3 i32, arg4 i32)
+
 pub type GLFWcharfun = fn (arg0 &Window, arg1 u32)
+
 pub type GLFWcharmodsfun = fn (arg0 &Window, arg1 u32, arg2 i32)
+
 pub type GLFWdropfun = fn (arg0 &Window, arg1 i32, arg2 &&char)
+
 pub type GLFWmonitorfun = fn (arg0 &Monitor, arg1 i32)
+
 pub type GLFWjoystickfun = fn (arg0 i32, arg1 i32)
 
 // Core GLFW functions not already present in the handwritten compatibility API.
 
 fn C.glfwInitHint(i32, i32)
-
 pub fn init_hint(arg0 i32, arg1 i32) {
 	C.glfwInitHint(arg0, arg1)
 }
 
 fn C.glfwInitAllocator(&Allocator)
-
 pub fn init_allocator(arg0 &Allocator) {
 	C.glfwInitAllocator(arg0)
 }
 
 fn C.glfwInitVulkanLoader(vk.PFN_vkGetInstanceProcAddr)
-
 pub fn init_vulkan_loader(arg0 vk.PFN_vkGetInstanceProcAddr) {
 	C.glfwInitVulkanLoader(arg0)
 }
 
 fn C.glfwGetVersion(&i32, &i32, &i32)
-
 pub fn get_version(arg0 &i32, arg1 &i32, arg2 &i32) {
 	C.glfwGetVersion(arg0, arg1, arg2)
 }
 
 fn C.glfwGetVersionString() &char
-
 pub fn get_version_string() &char {
 	return C.glfwGetVersionString()
 }
 
 fn C.glfwGetError(&&char) i32
-
 pub fn get_error(arg0 &&char) i32 {
 	return C.glfwGetError(arg0)
 }
 
 fn C.glfwGetPlatform() i32
-
 pub fn get_platform() i32 {
 	return C.glfwGetPlatform()
 }
 
 fn C.glfwPlatformSupported(i32) i32
-
 pub fn platform_supported(arg0 i32) i32 {
 	return C.glfwPlatformSupported(arg0)
 }
 
 fn C.glfwGetMonitors(&i32) &&Monitor
-
 pub fn get_monitors(arg0 &i32) &&Monitor {
 	return C.glfwGetMonitors(arg0)
 }
 
 fn C.glfwGetPrimaryMonitor() &Monitor
-
 pub fn get_primary_monitor() &Monitor {
 	return C.glfwGetPrimaryMonitor()
 }
 
 fn C.glfwGetMonitorPos(&Monitor, &i32, &i32)
-
 pub fn get_monitor_pos(arg0 &Monitor, arg1 &i32, arg2 &i32) {
 	C.glfwGetMonitorPos(arg0, arg1, arg2)
 }
 
 fn C.glfwGetMonitorWorkarea(&Monitor, &i32, &i32, &i32, &i32)
-
 pub fn get_monitor_workarea(arg0 &Monitor, arg1 &i32, arg2 &i32, arg3 &i32, arg4 &i32) {
 	C.glfwGetMonitorWorkarea(arg0, arg1, arg2, arg3, arg4)
 }
 
 fn C.glfwGetMonitorPhysicalSize(&Monitor, &i32, &i32)
-
 pub fn get_monitor_physical_size(arg0 &Monitor, arg1 &i32, arg2 &i32) {
 	C.glfwGetMonitorPhysicalSize(arg0, arg1, arg2)
 }
 
 fn C.glfwGetMonitorContentScale(&Monitor, &f32, &f32)
-
 pub fn get_monitor_content_scale(arg0 &Monitor, arg1 &f32, arg2 &f32) {
 	C.glfwGetMonitorContentScale(arg0, arg1, arg2)
 }
 
 fn C.glfwGetMonitorName(&Monitor) &char
-
 pub fn get_monitor_name(arg0 &Monitor) &char {
 	return C.glfwGetMonitorName(arg0)
 }
 
 fn C.glfwSetMonitorUserPointer(&Monitor, voidptr)
-
 pub fn set_monitor_user_pointer(arg0 &Monitor, arg1 voidptr) {
 	C.glfwSetMonitorUserPointer(arg0, arg1)
 }
 
 fn C.glfwGetMonitorUserPointer(&Monitor) voidptr
-
 pub fn get_monitor_user_pointer(arg0 &Monitor) voidptr {
 	return C.glfwGetMonitorUserPointer(arg0)
 }
 
 fn C.glfwSetMonitorCallback(GLFWmonitorfun) GLFWmonitorfun
-
 pub fn set_monitor_callback(arg0 GLFWmonitorfun) GLFWmonitorfun {
 	return C.glfwSetMonitorCallback(arg0)
 }
 
 fn C.glfwGetVideoModes(&Monitor, &i32) &VideoMode
-
 pub fn get_video_modes(arg0 &Monitor, arg1 &i32) &VideoMode {
 	return C.glfwGetVideoModes(arg0, arg1)
 }
 
 fn C.glfwGetVideoMode(&Monitor) &VideoMode
-
 pub fn get_video_mode(arg0 &Monitor) &VideoMode {
 	return C.glfwGetVideoMode(arg0)
 }
 
 fn C.glfwSetGamma(&Monitor, f32)
-
 pub fn set_gamma(arg0 &Monitor, arg1 f32) {
 	C.glfwSetGamma(arg0, arg1)
 }
 
 fn C.glfwGetGammaRamp(&Monitor) &GammaRamp
-
 pub fn get_gamma_ramp(arg0 &Monitor) &GammaRamp {
 	return C.glfwGetGammaRamp(arg0)
 }
 
 fn C.glfwSetGammaRamp(&Monitor, &GammaRamp)
-
 pub fn set_gamma_ramp(arg0 &Monitor, arg1 &GammaRamp) {
 	C.glfwSetGammaRamp(arg0, arg1)
 }
 
 fn C.glfwDefaultWindowHints()
-
 pub fn default_window_hints() {
 	C.glfwDefaultWindowHints()
 }
 
 fn C.glfwWindowHintString(i32, &char)
-
 pub fn window_hint_string(arg0 i32, arg1 &char) {
 	C.glfwWindowHintString(arg0, arg1)
 }
 
 fn C.glfwGetWindowTitle(&Window) &char
-
 pub fn get_window_title(arg0 &Window) &char {
 	return C.glfwGetWindowTitle(arg0)
 }
 
 fn C.glfwSetWindowTitle(&Window, &char)
-
 pub fn set_window_title(arg0 &Window, arg1 &char) {
 	C.glfwSetWindowTitle(arg0, arg1)
 }
 
 fn C.glfwSetWindowIcon(&Window, i32, &Image)
-
 pub fn set_window_icon(arg0 &Window, arg1 i32, arg2 &Image) {
 	C.glfwSetWindowIcon(arg0, arg1, arg2)
 }
 
 fn C.glfwGetWindowPos(&Window, &i32, &i32)
-
 pub fn get_window_pos(arg0 &Window, arg1 &i32, arg2 &i32) {
 	C.glfwGetWindowPos(arg0, arg1, arg2)
 }
 
 fn C.glfwSetWindowPos(&Window, i32, i32)
-
 pub fn set_window_pos(arg0 &Window, arg1 i32, arg2 i32) {
 	C.glfwSetWindowPos(arg0, arg1, arg2)
 }
 
 fn C.glfwGetWindowSize(&Window, &i32, &i32)
-
 pub fn get_window_size(arg0 &Window, arg1 &i32, arg2 &i32) {
 	C.glfwGetWindowSize(arg0, arg1, arg2)
 }
 
 fn C.glfwSetWindowSizeLimits(&Window, i32, i32, i32, i32)
-
 pub fn set_window_size_limits(arg0 &Window, arg1 i32, arg2 i32, arg3 i32, arg4 i32) {
 	C.glfwSetWindowSizeLimits(arg0, arg1, arg2, arg3, arg4)
 }
 
 fn C.glfwSetWindowAspectRatio(&Window, i32, i32)
-
 pub fn set_window_aspect_ratio(arg0 &Window, arg1 i32, arg2 i32) {
 	C.glfwSetWindowAspectRatio(arg0, arg1, arg2)
 }
 
 fn C.glfwSetWindowSize(&Window, i32, i32)
-
 pub fn set_window_size(arg0 &Window, arg1 i32, arg2 i32) {
 	C.glfwSetWindowSize(arg0, arg1, arg2)
 }
 
 fn C.glfwGetWindowFrameSize(&Window, &i32, &i32, &i32, &i32)
-
 pub fn get_window_frame_size(arg0 &Window, arg1 &i32, arg2 &i32, arg3 &i32, arg4 &i32) {
 	C.glfwGetWindowFrameSize(arg0, arg1, arg2, arg3, arg4)
 }
 
 fn C.glfwGetWindowContentScale(&Window, &f32, &f32)
-
 pub fn get_window_content_scale(arg0 &Window, arg1 &f32, arg2 &f32) {
 	C.glfwGetWindowContentScale(arg0, arg1, arg2)
 }
 
 fn C.glfwGetWindowOpacity(&Window) f32
-
 pub fn get_window_opacity(arg0 &Window) f32 {
 	return C.glfwGetWindowOpacity(arg0)
 }
 
 fn C.glfwSetWindowOpacity(&Window, f32)
-
 pub fn set_window_opacity(arg0 &Window, arg1 f32) {
 	C.glfwSetWindowOpacity(arg0, arg1)
 }
 
 fn C.glfwIconifyWindow(&Window)
-
 pub fn iconify_window(arg0 &Window) {
 	C.glfwIconifyWindow(arg0)
 }
 
 fn C.glfwRestoreWindow(&Window)
-
 pub fn restore_window(arg0 &Window) {
 	C.glfwRestoreWindow(arg0)
 }
 
 fn C.glfwMaximizeWindow(&Window)
-
 pub fn maximize_window(arg0 &Window) {
 	C.glfwMaximizeWindow(arg0)
 }
 
 fn C.glfwShowWindow(&Window)
-
 pub fn show_window(arg0 &Window) {
 	C.glfwShowWindow(arg0)
 }
 
 fn C.glfwHideWindow(&Window)
-
 pub fn hide_window(arg0 &Window) {
 	C.glfwHideWindow(arg0)
 }
 
 fn C.glfwFocusWindow(&Window)
-
 pub fn focus_window(arg0 &Window) {
 	C.glfwFocusWindow(arg0)
 }
 
 fn C.glfwRequestWindowAttention(&Window)
-
 pub fn request_window_attention(arg0 &Window) {
 	C.glfwRequestWindowAttention(arg0)
 }
 
 fn C.glfwGetWindowMonitor(&Window) &Monitor
-
 pub fn get_window_monitor(arg0 &Window) &Monitor {
 	return C.glfwGetWindowMonitor(arg0)
 }
 
 fn C.glfwSetWindowMonitor(&Window, &Monitor, i32, i32, i32, i32, i32)
-
 pub fn set_window_monitor(arg0 &Window, arg1 &Monitor, arg2 i32, arg3 i32, arg4 i32, arg5 i32, arg6 i32) {
 	C.glfwSetWindowMonitor(arg0, arg1, arg2, arg3, arg4, arg5, arg6)
 }
 
 fn C.glfwSetWindowAttrib(&Window, i32, i32)
-
 pub fn set_window_attrib(arg0 &Window, arg1 i32, arg2 i32) {
 	C.glfwSetWindowAttrib(arg0, arg1, arg2)
 }
 
 fn C.glfwSetWindowPosCallback(&Window, GLFWwindowposfun) GLFWwindowposfun
-
 pub fn set_window_pos_callback(arg0 &Window, arg1 GLFWwindowposfun) GLFWwindowposfun {
 	return C.glfwSetWindowPosCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowSizeCallback(&Window, GLFWwindowsizefun) GLFWwindowsizefun
-
 pub fn set_window_size_callback(arg0 &Window, arg1 GLFWwindowsizefun) GLFWwindowsizefun {
 	return C.glfwSetWindowSizeCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowCloseCallback(&Window, GLFWwindowclosefun) GLFWwindowclosefun
-
 pub fn set_window_close_callback(arg0 &Window, arg1 GLFWwindowclosefun) GLFWwindowclosefun {
 	return C.glfwSetWindowCloseCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowRefreshCallback(&Window, GLFWwindowrefreshfun) GLFWwindowrefreshfun
-
 pub fn set_window_refresh_callback(arg0 &Window, arg1 GLFWwindowrefreshfun) GLFWwindowrefreshfun {
 	return C.glfwSetWindowRefreshCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowFocusCallback(&Window, GLFWwindowfocusfun) GLFWwindowfocusfun
-
 pub fn set_window_focus_callback(arg0 &Window, arg1 GLFWwindowfocusfun) GLFWwindowfocusfun {
 	return C.glfwSetWindowFocusCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowIconifyCallback(&Window, GLFWwindowiconifyfun) GLFWwindowiconifyfun
-
 pub fn set_window_iconify_callback(arg0 &Window, arg1 GLFWwindowiconifyfun) GLFWwindowiconifyfun {
 	return C.glfwSetWindowIconifyCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowMaximizeCallback(&Window, GLFWwindowmaximizefun) GLFWwindowmaximizefun
-
 pub fn set_window_maximize_callback(arg0 &Window, arg1 GLFWwindowmaximizefun) GLFWwindowmaximizefun {
 	return C.glfwSetWindowMaximizeCallback(arg0, arg1)
 }
 
 fn C.glfwSetFramebufferSizeCallback(&Window, GLFWframebuffersizefun) GLFWframebuffersizefun
-
 pub fn set_framebuffer_size_callback(arg0 &Window, arg1 GLFWframebuffersizefun) GLFWframebuffersizefun {
 	return C.glfwSetFramebufferSizeCallback(arg0, arg1)
 }
 
 fn C.glfwSetWindowContentScaleCallback(&Window, GLFWwindowcontentscalefun) GLFWwindowcontentscalefun
-
 pub fn set_window_content_scale_callback(arg0 &Window, arg1 GLFWwindowcontentscalefun) GLFWwindowcontentscalefun {
 	return C.glfwSetWindowContentScaleCallback(arg0, arg1)
 }
 
 fn C.glfwWaitEvents()
-
 pub fn wait_events() {
 	C.glfwWaitEvents()
 }
 
 fn C.glfwWaitEventsTimeout(f64)
-
 pub fn wait_events_timeout(arg0 f64) {
 	C.glfwWaitEventsTimeout(arg0)
 }
 
 fn C.glfwPostEmptyEvent()
-
 pub fn post_empty_event() {
 	C.glfwPostEmptyEvent()
 }
 
 fn C.glfwGetInputMode(&Window, i32) i32
-
 pub fn get_input_mode(arg0 &Window, arg1 i32) i32 {
 	return C.glfwGetInputMode(arg0, arg1)
 }
 
 fn C.glfwSetInputMode(&Window, i32, i32)
-
 pub fn set_input_mode(arg0 &Window, arg1 i32, arg2 i32) {
 	C.glfwSetInputMode(arg0, arg1, arg2)
 }
 
 fn C.glfwRawMouseMotionSupported() i32
-
 pub fn raw_mouse_motion_supported() i32 {
 	return C.glfwRawMouseMotionSupported()
 }
 
 fn C.glfwGetKeyName(i32, i32) &char
-
 pub fn get_key_name(arg0 i32, arg1 i32) &char {
 	return C.glfwGetKeyName(arg0, arg1)
 }
 
 fn C.glfwGetKeyScancode(i32) i32
-
 pub fn get_key_scancode(arg0 i32) i32 {
 	return C.glfwGetKeyScancode(arg0)
 }
 
 fn C.glfwGetMouseButton(&Window, i32) i32
-
 pub fn get_mouse_button(arg0 &Window, arg1 i32) i32 {
 	return C.glfwGetMouseButton(arg0, arg1)
 }
 
 fn C.glfwGetCursorPos(&Window, &f64, &f64)
-
 pub fn get_cursor_pos(arg0 &Window, arg1 &f64, arg2 &f64) {
 	C.glfwGetCursorPos(arg0, arg1, arg2)
 }
 
 fn C.glfwSetCursorPos(&Window, f64, f64)
-
 pub fn set_cursor_pos(arg0 &Window, arg1 f64, arg2 f64) {
 	C.glfwSetCursorPos(arg0, arg1, arg2)
 }
 
 fn C.glfwCreateCursor(&Image, i32, i32) &Cursor
-
 pub fn create_cursor(arg0 &Image, arg1 i32, arg2 i32) &Cursor {
 	return C.glfwCreateCursor(arg0, arg1, arg2)
 }
 
 fn C.glfwCreateStandardCursor(i32) &Cursor
-
 pub fn create_standard_cursor(arg0 i32) &Cursor {
 	return C.glfwCreateStandardCursor(arg0)
 }
 
 fn C.glfwDestroyCursor(&Cursor)
-
 pub fn destroy_cursor(arg0 &Cursor) {
 	C.glfwDestroyCursor(arg0)
 }
 
 fn C.glfwSetCursor(&Window, &Cursor)
-
 pub fn set_cursor(arg0 &Window, arg1 &Cursor) {
 	C.glfwSetCursor(arg0, arg1)
 }
 
 fn C.glfwSetCharCallback(&Window, GLFWcharfun) GLFWcharfun
-
 pub fn set_char_callback(arg0 &Window, arg1 GLFWcharfun) GLFWcharfun {
 	return C.glfwSetCharCallback(arg0, arg1)
 }
 
 fn C.glfwSetCharModsCallback(&Window, GLFWcharmodsfun) GLFWcharmodsfun
-
 pub fn set_char_mods_callback(arg0 &Window, arg1 GLFWcharmodsfun) GLFWcharmodsfun {
 	return C.glfwSetCharModsCallback(arg0, arg1)
 }
 
 fn C.glfwSetMouseButtonCallback(&Window, GLFWmousebuttonfun) GLFWmousebuttonfun
-
 pub fn set_mouse_button_callback(arg0 &Window, arg1 GLFWmousebuttonfun) GLFWmousebuttonfun {
 	return C.glfwSetMouseButtonCallback(arg0, arg1)
 }
 
 fn C.glfwSetCursorPosCallback(&Window, GLFWcursorposfun) GLFWcursorposfun
-
 pub fn set_cursor_pos_callback(arg0 &Window, arg1 GLFWcursorposfun) GLFWcursorposfun {
 	return C.glfwSetCursorPosCallback(arg0, arg1)
 }
 
 fn C.glfwSetCursorEnterCallback(&Window, GLFWcursorenterfun) GLFWcursorenterfun
-
 pub fn set_cursor_enter_callback(arg0 &Window, arg1 GLFWcursorenterfun) GLFWcursorenterfun {
 	return C.glfwSetCursorEnterCallback(arg0, arg1)
 }
 
 fn C.glfwSetScrollCallback(&Window, GLFWscrollfun) GLFWscrollfun
-
 pub fn set_scroll_callback(arg0 &Window, arg1 GLFWscrollfun) GLFWscrollfun {
 	return C.glfwSetScrollCallback(arg0, arg1)
 }
 
 fn C.glfwSetDropCallback(&Window, GLFWdropfun) GLFWdropfun
-
 pub fn set_drop_callback(arg0 &Window, arg1 GLFWdropfun) GLFWdropfun {
 	return C.glfwSetDropCallback(arg0, arg1)
 }
 
 fn C.glfwJoystickPresent(i32) i32
-
 pub fn joystick_present(arg0 i32) i32 {
 	return C.glfwJoystickPresent(arg0)
 }
 
 fn C.glfwGetJoystickAxes(i32, &i32) &f32
-
 pub fn get_joystick_axes(arg0 i32, arg1 &i32) &f32 {
 	return C.glfwGetJoystickAxes(arg0, arg1)
 }
 
 fn C.glfwGetJoystickButtons(i32, &i32) &u8
-
 pub fn get_joystick_buttons(arg0 i32, arg1 &i32) &u8 {
 	return C.glfwGetJoystickButtons(arg0, arg1)
 }
 
 fn C.glfwGetJoystickHats(i32, &i32) &u8
-
 pub fn get_joystick_hats(arg0 i32, arg1 &i32) &u8 {
 	return C.glfwGetJoystickHats(arg0, arg1)
 }
 
 fn C.glfwGetJoystickName(i32) &char
-
 pub fn get_joystick_name(arg0 i32) &char {
 	return C.glfwGetJoystickName(arg0)
 }
 
 fn C.glfwGetJoystickGUID(i32) &char
-
 pub fn get_joystick_g_u_i_d(arg0 i32) &char {
 	return C.glfwGetJoystickGUID(arg0)
 }
 
 fn C.glfwSetJoystickUserPointer(i32, voidptr)
-
 pub fn set_joystick_user_pointer(arg0 i32, arg1 voidptr) {
 	C.glfwSetJoystickUserPointer(arg0, arg1)
 }
 
 fn C.glfwGetJoystickUserPointer(i32) voidptr
-
 pub fn get_joystick_user_pointer(arg0 i32) voidptr {
 	return C.glfwGetJoystickUserPointer(arg0)
 }
 
 fn C.glfwJoystickIsGamepad(i32) i32
-
 pub fn joystick_is_gamepad(arg0 i32) i32 {
 	return C.glfwJoystickIsGamepad(arg0)
 }
 
 fn C.glfwSetJoystickCallback(GLFWjoystickfun) GLFWjoystickfun
-
 pub fn set_joystick_callback(arg0 GLFWjoystickfun) GLFWjoystickfun {
 	return C.glfwSetJoystickCallback(arg0)
 }
 
 fn C.glfwUpdateGamepadMappings(&char) i32
-
 pub fn update_gamepad_mappings(arg0 &char) i32 {
 	return C.glfwUpdateGamepadMappings(arg0)
 }
 
 fn C.glfwGetGamepadName(i32) &char
-
 pub fn get_gamepad_name(arg0 i32) &char {
 	return C.glfwGetGamepadName(arg0)
 }
 
 fn C.glfwGetGamepadState(i32, &GamepadState) i32
-
 pub fn get_gamepad_state(arg0 i32, arg1 &GamepadState) i32 {
 	return C.glfwGetGamepadState(arg0, arg1)
 }
 
 fn C.glfwSetClipboardString(&Window, &char)
-
 pub fn set_clipboard_string(arg0 &Window, arg1 &char) {
 	C.glfwSetClipboardString(arg0, arg1)
 }
 
 fn C.glfwGetClipboardString(&Window) &char
-
 pub fn get_clipboard_string(arg0 &Window) &char {
 	return C.glfwGetClipboardString(arg0)
 }
 
 fn C.glfwGetTime() f64
-
 pub fn get_time() f64 {
 	return C.glfwGetTime()
 }
 
 fn C.glfwSetTime(f64)
-
 pub fn set_time(arg0 f64) {
 	C.glfwSetTime(arg0)
 }
 
 fn C.glfwGetTimerValue() u64
-
 pub fn get_timer_value() u64 {
 	return C.glfwGetTimerValue()
 }
 
 fn C.glfwGetTimerFrequency() u64
-
 pub fn get_timer_frequency() u64 {
 	return C.glfwGetTimerFrequency()
 }
 
 fn C.glfwGetCurrentContext() &Window
-
 pub fn get_current_context() &Window {
 	return C.glfwGetCurrentContext()
 }
 
 fn C.glfwSwapBuffers(&Window)
-
 pub fn swap_buffers(arg0 &Window) {
 	C.glfwSwapBuffers(arg0)
 }
 
 fn C.glfwSwapInterval(i32)
-
 pub fn swap_interval(arg0 i32) {
 	C.glfwSwapInterval(arg0)
 }
 
 fn C.glfwExtensionSupported(&char) i32
-
 pub fn extension_supported(arg0 &char) i32 {
 	return C.glfwExtensionSupported(arg0)
 }
 
 fn C.glfwGetProcAddress(&char) voidptr
-
 pub fn get_proc_address(arg0 &char) voidptr {
 	return C.glfwGetProcAddress(arg0)
 }
 
 fn C.glfwGetInstanceProcAddress(vk.Instance, &char) voidptr
-
 pub fn get_instance_proc_address(arg0 vk.Instance, arg1 &char) voidptr {
 	return C.glfwGetInstanceProcAddress(arg0, arg1)
 }
