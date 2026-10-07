@@ -12,8 +12,10 @@ available.
 
 The binding links to a GLFW library and headers at least as new as the version
 in `third_party/upstream.json`, within the same major release. The
-installed library must match the selected headers. It also currently requires
-`antono2.vulkan@v3.2.0` for GLFW's Vulkan functions.
+installed library must match the selected headers. GLFW's Vulkan functions also
+use the Vulkan module dependency recorded in [`v.mod`](v.mod). VPM installs
+that dependency automatically; its release pin retains the tested combination
+and is not an instruction to pin every top-level installation.
 
 Install Vulkan, build or install the pinned GLFW release, install this V module, and run
 setup checks. Linux and macOS run headless tests; Windows checks syntax here
