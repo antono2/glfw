@@ -19,6 +19,23 @@ apply. If a new declaration cannot be represented, the update PR contains
 `UPSTREAM_UPDATE.md` with the error. Resolve it and review ABI and ownership
 changes before merging. Ownership-sensitive helpers belong in `convenience.v`.
 
+## Source layout
+
+- `glfw.v` preserves handwritten compatibility names and Vulkan wrappers.
+- `glfw_generated.v` supplies the remaining core API. Change
+  `tools/generate.py` for generated documentation, then regenerate; `--check`
+  verifies that the comments and declarations survive the next generation.
+- `convenience.v` copies borrowed data and provides fallible window creation.
+- `c/header.c.v` selects native headers and linker flags. `native/` contains
+  optional backend-specific accessors; `examples/native_*_smoke.v` checks
+  those platform imports without creating a graphical window.
+- `glfw_test.v` tests the linked library and null-platform window behavior.
+  `.github/scripts/` builds the pinned native library for CI.
+
+The upstream headers in `third_party/` retain their original documentation and
+license. Keep project-specific purpose comments in maintained source files and
+generator templates rather than editing those vendored headers.
+
 ## Verification
 
 With the matching GLFW development headers and library installed:

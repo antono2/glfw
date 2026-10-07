@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Builds the pinned shared GLFW release for macOS CI.
+# Exports GLFW paths and the Homebrew Vulkan loader prefix for subsequent steps.
 set -euo pipefail
 
 version=$(python3 -c "import json; print(json.load(open('modules/antono2/glfw/third_party/upstream.json'))['version'])")

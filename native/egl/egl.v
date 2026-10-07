@@ -1,3 +1,5 @@
+// Optional EGL display, context, surface, and configuration access for GLFW.
+// Requires EGL development headers and a GLFW build providing these entry points.
 module egl
 
 import antono2.glfw

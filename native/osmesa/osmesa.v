@@ -1,3 +1,5 @@
+// Optional access to OSMesa contexts and their color/depth buffers through GLFW.
+// Requires OSMesa headers; returned buffer pointers are borrowed, not copied.
 module osmesa
 
 import antono2.glfw

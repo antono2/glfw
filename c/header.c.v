@@ -1,3 +1,5 @@
+// Selects GLFW headers, Vulkan declarations, and platform linker flags for the binding.
+// GLFW_INCLUDE and GLFW_LIB must identify matching installed headers and libraries.
 module c
 
 #flag -I$env('GLFW_INCLUDE')

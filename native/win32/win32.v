@@ -1,3 +1,5 @@
+// Optional Win32 and WGL access for GLFW windows and monitors.
+// Adapter and monitor names are copied into V strings; window/context handles remain borrowed.
 module win32
 
 import antono2.glfw
