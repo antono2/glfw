@@ -1,3 +1,5 @@
+// Optional Cocoa and NSGL handle access for GLFW windows on macOS.
+// Returned native objects remain borrowed from GLFW; this module does not manage their lifetime.
 module cocoa
 
 import antono2.glfw

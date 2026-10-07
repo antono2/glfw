@@ -1,3 +1,5 @@
+// Handwritten compatibility names and Vulkan-oriented wrappers for GLFW.
+// Complements glfw_generated.v; raw handles and callback data retain GLFW lifetimes.
 module glfw
 
 import glfw.c as _

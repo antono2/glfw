@@ -1,3 +1,5 @@
+// Checks public ABI types, the linked GLFW version, and headless window helpers.
+// Uses GLFW's null platform so window tests do not require a display server.
 module glfw
 
 fn test_public_constants_and_types_compile() {
