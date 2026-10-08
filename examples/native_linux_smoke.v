@@ -1,4 +1,4 @@
-// Compile/link smoke check for the X11, Wayland, EGL, and OSMesa native modules.
+// Compile/link smoke check for the X11, Wayland, EGL and OSMesa native modules.
 // Calls getters before initialization to verify null results without opening a display.
 module main
 

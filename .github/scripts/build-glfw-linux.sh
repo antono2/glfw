@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Builds the pinned shared GLFW release with Wayland support for Linux CI.
-# Exports matching header, library, and runtime paths to later GitHub Actions steps.
+# Exports matching header, library and runtime paths to later GitHub Actions steps.
 set -euo pipefail
 
 version=$(python3 -c "import json; print(json.load(open('modules/antono2/glfw/third_party/upstream.json'))['version'])")

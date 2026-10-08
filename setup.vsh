@@ -162,7 +162,7 @@ fn main() {
 		exit(2)
 	}
 	if os.args.len == 2 && os.args[1] in ['-h', '--help'] {
-		println('Usage: v run setup.vsh [--install|--check]\n\nDefault: install Vulkan, GLFW, and the V modules.\n--check: perform read-only prerequisite and compile checks.')
+		println('Usage: v run setup.vsh [--install|--check]\n\nDefault: install Vulkan, GLFW and the V modules.\n--check: perform read-only prerequisite and compile checks.')
 		return
 	}
 	install := os.args.len == 1 || os.args[1] == '--install'
