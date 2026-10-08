@@ -3,7 +3,7 @@
 [Project portfolio](https://oreskin.de/projects_en.php)
 
 The main `antono2.glfw` module covers the public functions, constants,
-callback signatures, and data structures in the pinned GLFW `glfw3.h`. The
+callback signatures and data structures in the pinned GLFW `glfw3.h`. The
 platform-specific native functions in `glfw3native.h` are provided as optional
 submodules under `native/`. The existing Vulkan-oriented API names remain
 available.
@@ -17,7 +17,7 @@ use the Vulkan module dependency recorded in [`v.mod`](v.mod). VPM installs
 that dependency automatically; its release pin retains the tested combination
 and is not an instruction to pin every top-level installation.
 
-Install Vulkan, build or install the pinned GLFW release, install this V module, and run
+Install Vulkan, build or install the pinned GLFW release, install this V module and run
 setup checks. Linux and macOS run headless tests; Windows checks syntax here
 and runs linked MSVC tests in CI:
 
@@ -31,7 +31,7 @@ For a read-only diagnostic pass:
 v run setup.vsh --check
 ```
 
-The installer builds the pinned GLFW release from its tag on Linux, macOS,
+The installer builds the pinned GLFW release from its tag on Linux, macOS
 and Windows. When setting up manually, point `GLFW_INCLUDE` to the
 directory containing `GLFW/glfw3.h` and `GLFW_LIB` to the matching library
 directory. On Linux, add that library directory to `LD_LIBRARY_PATH` at run
@@ -45,7 +45,7 @@ they do not replace the installed GLFW development package at compile time.
 
 The generated API follows GLFW's C signatures and snake-case names. It leaves
 GLFW-owned pointers borrowed. The handwritten convenience functions copy
-strings, monitor/video-mode data, joystick data, and Vulkan extensions into
+strings, monitor/video-mode data, joystick data and Vulkan extensions into
 V-owned values, expose sizes as `Size`, and offer `create_windowed` and
 `create_window_checked` for fallible creation.
 
@@ -75,7 +75,7 @@ GLFW requires most window and event operations on the main thread.
 
 Import the relevant optional submodule: `antono2.glfw.native.x11`,
 `antono2.glfw.native.wayland`, `antono2.glfw.native.win32`,
-`antono2.glfw.native.cocoa`, `antono2.glfw.native.egl`, or
+`antono2.glfw.native.cocoa`, `antono2.glfw.native.egl` or
 `antono2.glfw.native.osmesa`. These expose
 the native functions in the pinned `glfw3native.h`. Use only modules whose backends were enabled
 when the linked GLFW library was built. The EGL and OSMesa modules additionally

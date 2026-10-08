@@ -1,4 +1,4 @@
-// Optional X11 and GLX access for GLFW windows, monitors, and selection text.
+// Optional X11 and GLX access for GLFW windows, monitors and selection text.
 // Native handles remain borrowed; use with an X11-enabled GLFW build.
 module x11
 

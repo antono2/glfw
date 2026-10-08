@@ -1,4 +1,4 @@
-// Optional access to borrowed Wayland display, output, and surface handles.
+// Optional access to borrowed Wayland display, output and surface handles.
 // Use with Wayland headers and a GLFW library built with Wayland support.
 module wayland
 

@@ -65,7 +65,7 @@ def main() -> None:
         issue = "The major version changed and requires compatibility review.\n\n" if major_change else ""
         if result.returncode:
             issue += f"Generation failed:\n\n```text\n{result.stdout}{result.stderr}```\n\n"
-        NOTES.write_text(f"# GLFW {tag} update needs binding work\n\n{issue}Review the ABI and public API, regenerate if needed, and remove this file.\n")
+        NOTES.write_text(f"# GLFW {tag} update needs binding work\n\n{issue}Review the ABI and public API, regenerate if needed and remove this file.\n")
         print(NOTES.read_text())
     else:
         NOTES.unlink(missing_ok=True)
