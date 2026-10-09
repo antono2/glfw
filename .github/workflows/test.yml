@@ -33,6 +33,9 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
+      - name: Verify the declared dependency graph
+        shell: bash
+        run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - working-directory: modules/antono2/glfw
@@ -62,6 +65,9 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
+      - name: Verify the declared dependency graph
+        shell: bash
+        run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
       - name: Install Vulkan SDK and SwiftShader test artifacts
         shell: bash
         run: bash modules/antono2/vulkan/.github/scripts/setup-vulkan-ci.sh 1.4.309.0 v1.2
@@ -130,6 +136,9 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
+      - name: Verify the declared dependency graph
+        shell: bash
+        run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
       - run: brew install vulkan-loader
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-macos.sh
       - working-directory: modules/antono2/glfw
