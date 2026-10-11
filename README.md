@@ -63,7 +63,7 @@ window := glfw.create_windowed(640, 480, 'Example')!
 defer { glfw.destroy_window(window) }
 
 size := glfw.framebuffer_size(window)
-println('${size.width} × ${size.height}')
+println('${size.width} Ã— ${size.height}')
 ```
 
 The raw callback setters accept named V functions with the generated callback
@@ -87,3 +87,9 @@ The GLFW/Vulkan example in
 shows the binding in a graphical application.
 
 Maintainer information is in [MAINTAINING.md](MAINTAINING.md).
+
+
+## Compatibility and diagnostics
+
+See [tested profiles and read-only diagnostics](docs/compatibility.md) for
+compiler/dependency versions, setup recovery actions and upgrade checks.
