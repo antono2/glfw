@@ -2,6 +2,20 @@ module glfw
 
 // Convenience functions return owned V data where GLFW returns borrowed memory.
 
+// Initialization remains caller-owned: terminate on successful completion.
+// Preserve GLFW's error before another GLFW call can replace its description.
+pub fn initialize_checked() ! {
+	if initialize() {
+		return
+	}
+	mut description := unsafe { &char(0) }
+	code := get_error(&description)
+	if isnil(description) {
+		return error('GLFW initialization failed (${code})')
+	}
+	return error('GLFW initialization failed (${code}): ' + unsafe { description.vstring() }.clone())
+}
+
 // Size holds width and height; units depend on the query that produced it.
 pub struct Size {
 pub:

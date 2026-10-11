@@ -2,6 +2,24 @@
 // Uses GLFW's null platform so window tests do not require a display server.
 module glfw
 
+import antono2.vulkan as vk
+
+fn test_selected_vulkan_headers_cover_binding_registry() {
+	assert u32(C.VK_HEADER_VERSION) >= u32(vk.header_version)
+}
+
+fn test_checked_initialization_copies_native_error_and_recovers() {
+	init_hint(platform, 0x7fffffff)
+	mut message := ''
+	initialize_checked() or { message = err.msg() }
+	assert message.contains('GLFW initialization failed') && message.contains('Invalid platform ID')
+	init_hint(platform, platform_null)
+	initialize_checked() or { panic(err) }
+	defer { terminate() }
+	assert get_platform() == platform_null
+	assert message.contains('Invalid platform ID')
+}
+
 fn test_public_constants_and_types_compile() {
 	assert _true == 1
 	assert _false == 0

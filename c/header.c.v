@@ -4,6 +4,9 @@ module c
 
 #flag -I$env('GLFW_INCLUDE')
 #flag -L$env('GLFW_LIB')
+// GLFW's Vulkan include must prefer the selected SDK over older system headers.
+// Its include guard otherwise prevents the binding's bundled core from loading.
+#flag -I$env('VULKAN_SDK')/include
 #flag linux -I/usr/include
 #flag darwin -I/usr/local/include
 #flag darwin -I/opt/homebrew/include

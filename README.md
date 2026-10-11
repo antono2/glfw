@@ -37,6 +37,9 @@ directory containing `GLFW/glfw3.h` and `GLFW_LIB` to the matching library
 directory. On Linux, add that library directory to `LD_LIBRARY_PATH` at run
 time. Windows MSVC builds require `glfw3.lib` in `GLFW_LIB`. `VULKAN_SDK`
 must point to a compatible Vulkan SDK.
+Its headers must be at least as new as the registry bundled with the selected
+Vulkan binding. The SDK include directory is searched before system headers,
+so an older system Vulkan installation cannot mask the selected declarations.
 
 The checked-in headers in `third_party/` are pinned inputs to the generator;
 they do not replace the installed GLFW development package at compile time.
@@ -46,16 +49,14 @@ they do not replace the installed GLFW development package at compile time.
 The generated API follows GLFW's C signatures and snake-case names. It leaves
 GLFW-owned pointers borrowed. The handwritten convenience functions copy
 strings, monitor/video-mode data, joystick data and Vulkan extensions into
-V-owned values, expose sizes as `Size`, and offer `create_windowed` and
+V-owned values, expose sizes as `Size`, and offer `initialize_checked`, `create_windowed` and
 `create_window_checked` for fallible creation.
 
 ```v
 import antono2.glfw
 
 glfw.init_hint(glfw.platform, glfw.platform_null) // headless example
-if !glfw.initialize() {
-    panic('GLFW initialization failed')
-}
+glfw.initialize_checked()!
 defer { glfw.terminate() }
 
 glfw.window_hint(glfw.client_api, glfw.no_api)
