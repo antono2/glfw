@@ -63,7 +63,7 @@ window := glfw.create_windowed(640, 480, 'Example')!
 defer { glfw.destroy_window(window) }
 
 size := glfw.framebuffer_size(window)
-println('${size.width} Ã— ${size.height}')
+println('${size.width} × ${size.height}')
 ```
 
 The raw callback setters accept named V functions with the generated callback
