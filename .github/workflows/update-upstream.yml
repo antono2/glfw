@@ -35,18 +35,20 @@ jobs:
             exit 0
           fi
           branch=automation/glfw-upstream
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          if git ls-remote --exit-code origin "refs/heads/$branch" >/dev/null; then
-            git fetch origin "$branch:refs/remotes/origin/$branch"
-          fi
           git checkout -B "$branch"
           git add -A
-          git commit -m "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')"
-          git push --force-with-lease origin "$branch"
+          before=$(git rev-parse HEAD)
+          python3 tools/test_publish_generated_branch.py
+          python3 tools/publish_generated_branch.py "$branch" "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')"
+          pushed=false
+          if [[ $(git rev-parse HEAD) != "$before" ]]; then pushed=true; fi
+          created=false
           if ! gh pr list --head "$branch" --state open --json number --jq '.[0].number' | grep -q '^[0-9]'; then
             gh pr create --draft --base "$DEFAULT_BRANCH" --head "$branch" \
               --title "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')" \
               --body 'Automated upstream header and binding update. Review ABI and convenience behavior before merging. If UPSTREAM_UPDATE.md exists, generation needs manual work.'
+            created=true
           fi
-          gh workflow run test.yml --ref "$branch"
+          if [[ "$pushed" == true || "$created" == true ]]; then
+            gh workflow run test.yml --ref "$branch"
+          fi
