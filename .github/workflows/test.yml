@@ -45,6 +45,8 @@ jobs:
       - name: Verify the declared dependency graph
         shell: bash
         run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
+      - name: Test setup dependency requests
+        run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - working-directory: modules/antono2/glfw
@@ -85,6 +87,8 @@ jobs:
       - name: Verify the declared dependency graph
         shell: bash
         run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
+      - name: Test setup dependency requests
+        run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - name: Install Vulkan SDK and SwiftShader test artifacts
         shell: bash
         run: bash modules/antono2/vulkan/.github/scripts/setup-vulkan-ci.sh ${{ steps.compat.outputs.ci_sdk }} ${{ steps.compat.outputs.ci_runtime }}
@@ -164,6 +168,8 @@ jobs:
       - name: Verify the declared dependency graph
         shell: bash
         run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
+      - name: Test setup dependency requests
+        run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - run: brew install vulkan-loader
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-macos.sh
       - working-directory: modules/antono2/glfw
@@ -207,6 +213,8 @@ jobs:
         run: |
           make -C toolchain/v
           echo "$GITHUB_WORKSPACE/toolchain/v" >> "$GITHUB_PATH"
+      - name: Test setup dependency requests
+        run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - name: Test with V3 and GCC
