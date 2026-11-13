@@ -15,6 +15,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
+env:
+  V_C_ERROR_BUG_REPORT_DISABLED: 1
+
 jobs:
   linux:
     runs-on: ubuntu-24.04
@@ -47,7 +50,7 @@ jobs:
         run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - working-directory: modules/antono2/glfw
         run: python3 tools/generate.py --check
@@ -59,6 +62,12 @@ jobs:
           v -cc tcc test .
           python3 tools/check_abi.py --cc gcc
           v -cc gcc run examples/native_linux_smoke.v
+      - name: Test bounded Linux window startup with local Xlib
+        working-directory: modules/antono2/glfw
+        run: |
+          v -cc tcc -o "$RUNNER_TEMP/window-startup-probe" examples/window_startup.v
+          v -cc tcc -o "$RUNNER_TEMP/window-startup-check" tests/window_startup.v
+          VIMGUI_STARTUP_LOCAL_XLIB=1 "$RUNNER_TEMP/window-startup-check" "$RUNNER_TEMP/window-startup-probe" "$RUNNER_TEMP/window-startup-logs"
 
   windows:
     runs-on: windows-2022
@@ -215,7 +224,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/toolchain/v" >> "$GITHUB_PATH"
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - name: Test with V3 and GCC
         working-directory: modules/antono2/glfw
