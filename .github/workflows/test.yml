@@ -50,7 +50,7 @@ jobs:
         run: v run modules/antono2/glfw/scripts/check_installed_deps.vsh
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb mesa-vulkan-drivers vulkan-validationlayers
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - working-directory: modules/antono2/glfw
         run: python3 tools/generate.py --check
@@ -224,7 +224,7 @@ jobs:
           echo "$GITHUB_WORKSPACE/toolchain/v" >> "$GITHUB_PATH"
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
-      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb
+      - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb mesa-vulkan-drivers vulkan-validationlayers
       - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
       - name: Test with V3 and GCC
         working-directory: modules/antono2/glfw
