@@ -88,3 +88,9 @@ The GLFW/Vulkan example in
 shows the binding in a graphical application.
 
 Maintainer information is in [MAINTAINING.md](MAINTAINING.md).
+
+
+## Compatibility and diagnostics
+
+See [tested profiles and read-only diagnostics](docs/compatibility.md) for
+compiler/dependency versions, setup recovery actions and upgrade checks.
