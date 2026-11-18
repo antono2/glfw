@@ -27,14 +27,19 @@ fn certificate_bundle() string {
 	return ''
 }
 
-fn download(url string) !string {
+fn download(url string, token string) !string {
+	mut header := http.new_header(key: .accept, value: 'application/vnd.github+json')
+	if token != '' {
+		header.add(.authorization, 'Bearer ${token}')
+	}
 	response := http.fetch(
-		url:          url
-		user_agent:   'antono2-glfw-updater'
-		header:       http.new_header(key: .accept, value: 'application/vnd.github+json')
-		validate:     true
-		verify:       certificate_bundle()
-		read_timeout: 30 * time.second
+		url:            url
+		user_agent:     'antono2-glfw-updater'
+		header:         header
+		allow_redirect: token == ''
+		validate:       true
+		verify:         certificate_bundle()
+		read_timeout:   30 * time.second
 	)!
 	if response.status_code != 200 {
 		return error('GET ${url} returned HTTP ${response.status_code}')
@@ -43,8 +48,8 @@ fn download(url string) !string {
 }
 
 fn latest_tag() !string {
-	release :=
-		json2.decode[Release](download('https://api.github.com/repos/glfw/glfw/releases/latest')!)!
+	release := json2.decode[Release](download('https://api.github.com/repos/glfw/glfw/releases/latest',
+		os.getenv('GH_TOKEN'))!)!
 	if release.draft || release.prerelease {
 		return error('GitHub’s latest release is not stable')
 	}
@@ -83,7 +88,7 @@ fn update(root string, tag string, pin glfwgen.Pin) ! {
 	mut hashes := map[string]string{}
 	for name in glfwgen.header_files {
 		content :=
-			download('https://raw.githubusercontent.com/glfw/glfw/${tag}/include/GLFW/${name}')!
+			download('https://raw.githubusercontent.com/glfw/glfw/${tag}/include/GLFW/${name}', '')!
 		downloaded[name] = content
 		hashes[name] = sha256.hexhash(content)
 	}

@@ -24,6 +24,8 @@ jobs:
           version: 0.5.2
           install-dependencies: false
       - name: Fetch stable release and regenerate bindings
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: v run tools/update_upstream.vsh
       - name: Open or refresh update PR
         env:
