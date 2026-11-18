@@ -22,8 +22,11 @@ jobs:
       - uses: prantlf/setup-v-action@92f20bea50d2c9931a28c96bb4997a3c7357baf0 # v4
         with:
           version: 0.5.2
+          install-dependencies: false
       - name: Fetch stable release and regenerate bindings
-        run: python3 tools/update_upstream.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: v run tools/update_upstream.vsh
       - name: Open or refresh update PR
         env:
           GH_TOKEN: ${{ github.token }}
@@ -34,18 +37,19 @@ jobs:
             echo 'No new GLFW release.'
             exit 0
           fi
+          version=$(v run tools/update_upstream.vsh --print-version)
           branch=automation/glfw-upstream
           git checkout -B "$branch"
           git add -A
           before=$(git rev-parse HEAD)
           v run tools/publish_generated_branch.vsh --self-test
-          v run tools/publish_generated_branch.vsh "$branch" "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')"
+          v run tools/publish_generated_branch.vsh "$branch" "Update GLFW to $version"
           pushed=false
           if [[ $(git rev-parse HEAD) != "$before" ]]; then pushed=true; fi
           created=false
           if ! gh pr list --head "$branch" --state open --json number --jq '.[0].number' | grep -q '^[0-9]'; then
             gh pr create --draft --base "$DEFAULT_BRANCH" --head "$branch" \
-              --title "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')" \
+              --title "Update GLFW to $version" \
               --body 'Automated upstream header and binding update. Review ABI and convenience behavior before merging. If UPSTREAM_UPDATE.md exists, generation needs manual work.'
             created=true
           fi
