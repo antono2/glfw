@@ -9,7 +9,8 @@ fn test_selected_vulkan_headers_cover_binding_registry() {
 }
 
 fn test_checked_initialization_copies_native_error_and_recovers() {
-	init_hint(platform, 0x7fffffff)
+	invalid_platform_id := 0x7fffffff
+	init_hint(platform, invalid_platform_id)
 	mut message := ''
 	initialize_checked() or { message = err.msg() }
 	assert message.contains('GLFW initialization failed') && message.contains('Invalid platform ID')
