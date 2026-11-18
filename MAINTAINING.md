@@ -9,7 +9,7 @@ headers and pin, regenerates the binding and opens a draft PR. The same update
 can be run locally with:
 
 ```sh
-python3 tools/update_upstream.py
+v run tools/update_upstream.vsh
 ```
 
 Existing V names are retained from the committed bindings; new GLFW structs
@@ -22,15 +22,15 @@ changes before merging. Ownership-sensitive helpers belong in `convenience.v`.
 ## Source layout
 
 - `glfw.v` preserves handwritten compatibility names and Vulkan wrappers.
-- `glfw_generated.v` supplies the remaining core API. Change
-  `tools/generate.py` for generated documentation, then regenerate; `--check`
-  verifies that the comments and declarations survive the next generation.
+- `glfw_generated.v` supplies the remaining core API. The generation
+  code and its comments live in `tools/glfwgen/`. Use
+  `v run tools/generate.vsh` to regenerate the file.
 - `convenience.v` copies borrowed data and provides fallible window creation.
 - `c/header.c.v` selects native headers and linker flags. `native/` contains
   optional backend-specific accessors; `examples/native_*_smoke.v` checks
   those platform imports without creating a graphical window.
 - `glfw_test.v` tests the linked library and null-platform window behavior.
-  `.github/scripts/` builds the pinned native library for CI.
+  `tools/build_native.vsh` builds the pinned native library in Linux and macOS CI.
 
 The upstream headers in `third_party/` retain their original documentation and
 license. Keep project-specific purpose comments in maintained source files and
@@ -38,13 +38,15 @@ generator templates rather than editing those vendored headers.
 
 ## Verification
 
-With the matching GLFW development headers and library installed:
+Use V 0.5.2 or newer. The ABI probe and unit tests need the GLFW development
+headers and library from the pinned release. The generator check only needs V
+and the vendored headers.
 
-```sh
-python3 tools/generate.py --check
-python3 tools/check_abi.py --cc gcc
-v test .
-```
+| Command | Check |
+| --- | --- |
+| `v run tools/generate.vsh --check` | Reproduce the committed binding. |
+| `v run tools/check_abi.vsh --cc gcc` | Compile and link each generated core wrapper. Use `msvc` or `clang` to check a different compiler. |
+| `v test .` | Exercise the binding against the installed library. |
 
 The CI workflow also checks Linux, Windows and macOS against the pinned GLFW
 version.

@@ -56,16 +56,16 @@ jobs:
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb mesa-vulkan-drivers vulkan-validationlayers
-      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
+      - run: v run modules/antono2/glfw/tools/build_native.vsh
       - working-directory: modules/antono2/glfw
-        run: python3 tools/generate.py --check
+        run: v run tools/generate.vsh --check
       - working-directory: modules/antono2/glfw
         run: v run setup.vsh --check
       - working-directory: modules/antono2/glfw
         run: |
           v -cc gcc test .
           v -cc tcc test .
-          python3 tools/check_abi.py --cc gcc
+          v run tools/check_abi.vsh --cc gcc
           v -cc gcc run examples/native_linux_smoke.v
       - name: Test bounded Linux window startup with local Xlib
         working-directory: modules/antono2/glfw
@@ -156,8 +156,9 @@ jobs:
           if (-not $InstallPath) { throw 'Visual Studio C++ tools were not found' }
           Import-Module (Join-Path $InstallPath 'Common7\Tools\Microsoft.VisualStudio.DevShell.dll')
           Enter-VsDevShell -VsInstallPath $InstallPath -SkipAutomaticLocation -DevCmdArguments '-arch=x64 -host_arch=x64'
+          v run tools/generate.vsh --check
           v -cc msvc test .
-          python tools/check_abi.py --cc msvc
+          v run tools/check_abi.vsh --cc msvc
           v -cc msvc run examples/native_windows_smoke.v
 
   macos:
@@ -195,13 +196,13 @@ jobs:
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - run: brew install vulkan-loader
-      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-macos.sh
+      - run: v run modules/antono2/glfw/tools/build_native.vsh
       - working-directory: modules/antono2/glfw
         run: |
-          python3 tools/generate.py --check
+          v run tools/generate.vsh --check
           v run setup.vsh --check
           v -cc clang test .
-          python3 tools/check_abi.py --cc clang
+          v run tools/check_abi.vsh --cc clang
           v -cc clang run examples/native_macos_smoke.v
 
   linux-v-master:
@@ -244,7 +245,7 @@ jobs:
       - name: Test setup dependency requests
         run: v run modules/antono2/glfw/scripts/test_setup.vsh
       - run: sudo apt-get update && sudo apt-get install -y libglfw3-dev libvulkan-dev libvulkan-volk-dev libwayland-dev libxkbcommon-dev wayland-protocols libosmesa6-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libx11-dev openbox xauth xvfb mesa-vulkan-drivers vulkan-validationlayers
-      - run: bash modules/antono2/glfw/.github/scripts/build-glfw-linux.sh
+      - run: v run modules/antono2/glfw/tools/build_native.vsh
       - name: Test with V3 and GCC
         working-directory: modules/antono2/glfw
         run: v -cc gcc test .
