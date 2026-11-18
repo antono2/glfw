@@ -38,8 +38,8 @@ jobs:
           git checkout -B "$branch"
           git add -A
           before=$(git rev-parse HEAD)
-          python3 tools/test_publish_generated_branch.py
-          python3 tools/publish_generated_branch.py "$branch" "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')"
+          v run tools/publish_generated_branch.vsh --self-test
+          v run tools/publish_generated_branch.vsh "$branch" "Update GLFW to $(python3 -c 'import json; print(json.load(open("third_party/upstream.json"))["version"])')"
           pushed=false
           if [[ $(git rev-parse HEAD) != "$before" ]]; then pushed=true; fi
           created=false
