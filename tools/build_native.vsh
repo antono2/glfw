@@ -14,7 +14,7 @@ fn command(args []string) !string {
 fn build(args []string) ! {
 	mut parser := flag.new_flag_parser(args)
 	parser.application('build_native')
-	parser.description('Build the pinned shared GLFW library on Linux or macOS.')
+	parser.description('Build the pinned GLFW library for CI.')
 	work_arg := parser.string('work-dir', 0, os.getenv('RUNNER_TEMP'),
 		'parent directory for the checkout and install')
 	env_path := parser.string('github-env', 0, os.getenv('GITHUB_ENV'),
@@ -27,8 +27,8 @@ fn build(args []string) ! {
 		return error(parser.usage())
 	}
 	platform := os.user_os()
-	if platform !in ['linux', 'macos'] {
-		return error('this native build supports Linux and macOS')
+	if platform !in ['linux', 'macos', 'windows'] {
+		return error('unsupported GLFW build platform: ${platform}')
 	}
 	root := os.dir(@DIR)
 	version := glfwgen.read_pin(root)!.version
@@ -40,19 +40,26 @@ fn build(args []string) ! {
 		source])!
 	build_path := os.join_path(source, 'build')
 	mut configure := ['cmake', '-S', source, '-B', build_path, '-DCMAKE_INSTALL_PREFIX=${prefix}',
-		'-DBUILD_SHARED_LIBS=ON', '-DGLFW_BUILD_EXAMPLES=OFF', '-DGLFW_BUILD_TESTS=OFF',
-		'-DGLFW_BUILD_DOCS=OFF']
+		'-DBUILD_SHARED_LIBS=' + if platform == 'windows' { 'OFF' } else { 'ON' },
+		'-DGLFW_BUILD_EXAMPLES=OFF', '-DGLFW_BUILD_TESTS=OFF', '-DGLFW_BUILD_DOCS=OFF']
 	if platform == 'linux' {
 		configure << '-DGLFW_BUILD_WAYLAND=ON'
+	} else if platform == 'windows' {
+		configure << '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL'
 	}
+	config := if platform == 'windows' { ['--config', 'Release'] } else { []string{} }
 	command(configure)!
-	command(['cmake', '--build', build_path, '--parallel'])!
-	command(['cmake', '--install', build_path])!
+	mut compile := ['cmake', '--build', build_path, '--parallel']
+	compile << config
+	command(compile)!
+	mut install := ['cmake', '--install', build_path]
+	install << config
+	command(install)!
 	library := os.join_path(prefix, 'lib')
 	mut values := ['GLFW_INCLUDE=${os.join_path(prefix, 'include')}', 'GLFW_LIB=${library}']
 	if platform == 'linux' {
 		values << 'LD_LIBRARY_PATH=${library}'
-	} else {
+	} else if platform == 'macos' {
 		vulkan := command(['brew', '--prefix', 'vulkan-loader'])!.trim_space()
 		values << ['DYLD_LIBRARY_PATH=${library}', 'VULKAN_SDK=${vulkan}']
 	}
