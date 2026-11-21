@@ -12,6 +12,11 @@ can be run locally with:
 v run tools/update_upstream.vsh
 ```
 
+The workflow's V publisher reuses the existing draft for the update branch.
+It dispatches validation when it pushes changes or opens the draft.
+`v run tools/publish_generated_branch.vsh --self-test` exercises the proposal
+flow with temporary Git repositories and simulated GitHub commands.
+
 Existing V names are retained from the committed bindings; new GLFW structs
 and declarations are discovered from the headers. The generator has no fixed
 GLFW symbol inventory or counts. Generic C-to-V ABI conversion rules still

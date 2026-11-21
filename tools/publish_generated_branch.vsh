@@ -2,9 +2,12 @@
 import flag
 import os
 import rand
+import tools.glfwgen
 
 const bot_name = 'github-actions[bot]'
 const bot_email = '41898282+github-actions[bot]@users.noreply.github.com'
+const workflow_branch = 'automation/glfw-upstream'
+const workflow_body = 'Automated upstream header and binding update. Review ABI and convenience behavior before merging. If UPSTREAM_UPDATE.md exists, generation needs manual work.'
 
 struct Proposal {
 	ref      string
@@ -13,8 +16,9 @@ struct Proposal {
 }
 
 fn git(repo string, args []string) !string {
-	command := 'git -C ${os.quoted_path(repo)} ' + args.map(os.quoted_path(it)).join(' ')
-	result := os.execute(command)
+	mut invocation := ['git', '-C', repo]
+	invocation << args
+	result := os.exec(invocation)
 	if result.exit_code != 0 {
 		return error('git ${args[0]} failed: ${result.output.trim_space()}')
 	}
@@ -39,7 +43,10 @@ fn plan_proposal(repo string, branch string) !Proposal {
 		}
 		if git(repo, ['rev-parse', expected + '^{tree}'])! == desired_tree {
 			println('Generated files already match the existing proposal; no commit or push.')
-			return Proposal{}
+			return Proposal{
+				ref:      ref
+				expected: expected
+			}
 		}
 	}
 	if git(repo, ['rev-parse', 'HEAD^{tree}'])! == desired_tree {
@@ -69,6 +76,56 @@ fn publish(repo string, branch string, message string) !bool {
 	return apply_proposal(repo, plan_proposal(repo, branch)!, message)
 }
 
+type GitHubCommand = fn ([]string) !string
+
+fn github(args []string) !string {
+	mut invocation := ['gh']
+	invocation << args
+	result := os.exec(invocation)
+	if result.exit_code != 0 {
+		return error('gh ${args.join(' ')} failed: ${result.output.trim_space()}')
+	}
+	return result.output.trim_space()
+}
+
+fn propose_staged(repo string, base string, version string, gh GitHubCommand) ! {
+	if git(repo, ['rev-parse', 'HEAD^{tree}'])! == git(repo, ['write-tree'])! {
+		println('No new GLFW release.')
+		return
+	}
+	message := 'Update GLFW to ${version}'
+	proposal := plan_proposal(repo, workflow_branch)!
+	pushed := apply_proposal(repo, proposal, message)!
+	open := gh(['pr', 'list', '--base', base, '--head', workflow_branch, '--state', 'open', '--json',
+		'number', '--jq', '.[0].number // empty'])!
+	if open == '' {
+		expected := if pushed { git(repo, ['rev-parse', 'HEAD'])! } else { proposal.expected }
+		if expected == '' || remote_head(repo, proposal.ref)! != expected {
+			return error('Proposal moved before opening the draft. Retry later.')
+		}
+		println(gh(['pr', 'create', '--draft', '--base', base, '--head', workflow_branch, '--title',
+			message, '--body', workflow_body])!)
+	}
+	// Repository-token updates do not run the pull-request checks automatically.
+	if pushed || open == '' {
+		gh(['workflow', 'run', 'test.yml', '--ref', workflow_branch])!
+	}
+}
+
+fn propose_workflow(repo string, base string) ! {
+	if base == '' {
+		return error('DEFAULT_BRANCH is required in proposal mode.')
+	}
+	if git(repo, ['status', '--porcelain'])! == '' {
+		println('No new GLFW release.')
+		return
+	}
+	pin := glfwgen.read_pin(repo)!
+	git(repo, ['checkout', '-B', workflow_branch])!
+	git(repo, ['add', '-A'])!
+	propose_staged(repo, base, pin.version, github)!
+}
+
 fn write_output(path string, pushed bool) ! {
 	if path != '' {
 		mut stream := os.open_append(path)!
@@ -90,6 +147,68 @@ fn expect_rejected_lease(repo string, proposal Proposal, message string) ! {
 		return err
 	}
 	return error('Concurrent remote branch update was overwritten')
+}
+
+fn test_proposal_workflow(repo string, directory string, base string) ! {
+	request := os.join_path(directory, 'open-request')
+	events := os.join_path(directory, 'workflow-events')
+	os.write_file(events, '')!
+	gh := fn [request, events] (args []string) !string {
+		if args[..2] == ['pr', 'list'] {
+			assert args[2..8] == ['--base', 'master', '--head', workflow_branch, '--state', 'open']
+			return os.read_file(request) or { '' }
+		}
+		mut log := os.open_append(events)!
+		defer { log.close() }
+		match args[..2] {
+			['pr', 'create'] {
+				assert args[2..7] == ['--draft', '--base', 'master', '--head', workflow_branch]
+				assert args[7..9] == ['--title', 'Update GLFW to 3.5.0']
+				os.write_file(request, '42')!
+				log.writeln('draft')!
+			}
+			['workflow', 'run'] {
+				assert args[2..] == ['test.yml', '--ref', workflow_branch]
+				log.writeln('CI')!
+			}
+			else {
+				return error('Unexpected GitHub command: ${args}')
+			}
+		}
+
+		return ''
+	}
+	// Reset only the disposable repository created by self_test.
+	git(repo, ['checkout', '--force', '--detach', base])!
+	ref := 'refs/heads/' + workflow_branch
+	propose_staged(repo, 'master', '3.5.0', gh)!
+	assert remote_head(repo, ref)! == ''
+	assert os.read_file(events)! == ''
+
+	stage(repo, 'workflow release\n')!
+	propose_staged(repo, 'master', '3.5.0', gh)!
+	first := remote_head(repo, ref)!
+	assert first != '' && first != base
+	assert os.read_file(events)! == 'draft\nCI\n'
+
+	git(repo, ['checkout', '--detach', base])!
+	stage(repo, 'workflow release\n')!
+	propose_staged(repo, 'master', '3.5.0', gh)!
+	assert remote_head(repo, ref)! == first
+	assert os.read_file(events)! == 'draft\nCI\n'
+
+	stage(repo, 'refreshed workflow release\n')!
+	propose_staged(repo, 'master', '3.5.0', gh)!
+	second := remote_head(repo, ref)!
+	assert second != first
+	assert os.read_file(events)! == 'draft\nCI\nCI\n'
+
+	os.rm(request)!
+	git(repo, ['checkout', '--detach', base])!
+	stage(repo, 'refreshed workflow release\n')!
+	propose_staged(repo, 'master', '3.5.0', gh)!
+	assert remote_head(repo, ref)! == second
+	assert os.read_file(events)! == 'draft\nCI\nCI\ndraft\nCI\n'
 }
 
 fn self_test() ! {
@@ -161,7 +280,8 @@ fn self_test() ! {
 	write_output(output, true)!
 	write_output(output, false)!
 	assert os.read_file(output)! == 'pushed=true\npushed=false\n'
-	println('Publisher creation, no-op, update, and lease fixtures passed.')
+	test_proposal_workflow(repo, directory, base)!
+	println('Publisher creation, no-op, update, lease, and draft fixtures passed.')
 }
 
 fn run_cli() ! {
@@ -169,16 +289,22 @@ fn run_cli() ! {
 	parser.application('publish_generated_branch')
 	parser.description('Publish a staged Git tree using a lease on the proposal branch.')
 	test := parser.bool('self-test', 0, false, 'run against temporary local Git repositories')
+	propose := parser.bool('propose', 0, false,
+		'publish generated changes and ensure a draft exists')
 	if parser.bool('help', `h`, false, 'show help') {
 		println(parser.usage())
 		return
 	}
 	args := parser.finalize()!
-	if test && args.len == 0 {
+	if test && !propose && args.len == 0 {
 		self_test()!
 		return
 	}
-	if test || args.len != 2 {
+	if propose && !test && args.len == 0 {
+		propose_workflow(os.getwd(), os.getenv('DEFAULT_BRANCH'))!
+		return
+	}
+	if test || propose || args.len != 2 {
 		return error('expected a proposal branch and a commit message. See --help.')
 	}
 	pushed := publish(os.getwd(), args[0], args[1])!
