@@ -122,8 +122,57 @@ fn propose_workflow(repo string, base string) ! {
 	}
 	pin := glfwgen.read_pin(repo)!
 	git(repo, ['checkout', '-B', workflow_branch])!
-	git(repo, ['add', '-A'])!
+	stage_generated(repo)!
 	propose_staged(repo, base, pin.version, github)!
+}
+
+fn stage_generated(repo string) ! {
+	// V keeps the running script's executable beside its source. Only stage
+	// updater outputs so that executable and unrelated files cannot enter a PR.
+	mut paths := []string{}
+	for path in ['third_party/glfw3.h', 'third_party/glfw3native.h', 'third_party/upstream.json',
+		'glfw_generated.v', 'UPSTREAM_UPDATE.md'] {
+		if os.exists(os.join_path(repo, path)) || git(repo, ['ls-files', '--', path])! != '' {
+			paths << path
+		}
+	}
+	if paths.len > 0 {
+		mut args := ['add', '-A', '--']
+		args << paths
+		git(repo, args)!
+	}
+}
+
+fn test_generated_scope(directory string) ! {
+	repo := os.join_path(directory, 'generated scope')
+	os.mkdir_all(os.join_path(repo, 'third_party'))!
+	os.mkdir_all(os.join_path(repo, 'tools'))!
+	git(repo, ['init', '--initial-branch=master'])!
+	git(repo, ['config', 'user.name', 'Fixture'])!
+	git(repo, ['config', 'user.email', 'fixture@example.invalid'])!
+	git(repo, ['config', 'commit.gpgsign', 'false'])!
+	os.write_file(os.join_path(repo, 'glfw_generated.v'), 'old bindings\n')!
+	os.write_file(os.join_path(repo, 'UPSTREAM_UPDATE.md'), 'old review notes\n')!
+	git(repo, ['add', '-A'])!
+	git(repo, ['commit', '-m', 'base'])!
+	// A running V script has an adjacent executable until it exits.
+	os.write_file(os.join_path(repo, 'tools', 'publish_generated_branch'), 'executable fixture\n')!
+	os.write_file(os.join_path(repo, 'unrelated.txt'), 'unrelated fixture\n')!
+	stage_generated(repo)!
+	assert git(repo, ['diff', '--cached', '--name-only'])! == ''
+	os.write_file(os.join_path(repo, 'glfw_generated.v'), 'new bindings\n')!
+	os.write_file(os.join_path(repo, 'third_party', 'glfw3.h'), 'new header\n')!
+	os.write_file(os.join_path(repo, 'third_party', 'glfw3native.h'), 'new native header\n')!
+	os.write_file(os.join_path(repo, 'third_party', 'upstream.json'), '{}\n')!
+	os.rm(os.join_path(repo, 'UPSTREAM_UPDATE.md'))!
+	stage_generated(repo)!
+	assert git(repo, ['diff', '--cached', '--name-only'])!.split_into_lines() == [
+		'UPSTREAM_UPDATE.md',
+		'glfw_generated.v',
+		'third_party/glfw3.h',
+		'third_party/glfw3native.h',
+		'third_party/upstream.json',
+	]
 }
 
 fn write_output(path string, pushed bool) ! {
@@ -215,6 +264,7 @@ fn self_test() ! {
 	directory := os.join_path(os.temp_dir(), 'proposal fixture ' + rand.uuid_v4())
 	os.mkdir(directory)!
 	defer { os.rmdir_all(directory) or {} }
+	test_generated_scope(directory)!
 	remote := os.join_path(directory, 'remote.git')
 	repo := os.join_path(directory, 'work')
 	os.mkdir(repo)!
