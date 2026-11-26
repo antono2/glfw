@@ -16,7 +16,7 @@ fn check() ! {
 	os.setenv('GLFW_LIB', work, true)
 	mut args := ['run', source]
 	$if windows {
-		args = ['-cc', 'msvc', ...args]
+		args.prepend(['-cc', 'msvc'])
 	}
 	mut process := os.new_process(@VEXE)
 	process.set_args(args)
