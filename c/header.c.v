@@ -2,8 +2,8 @@
 // GLFW_INCLUDE and GLFW_LIB must identify matching installed headers and libraries.
 module c
 
-#flag -I"$env('GLFW_INCLUDE')"
-#flag -L"$env('GLFW_LIB')"
+#flag -I$env('GLFW_INCLUDE')
+#flag -L$env('GLFW_LIB')
 #flag linux -I/usr/include
 #flag darwin -I/usr/local/include
 #flag darwin -I/opt/homebrew/include
