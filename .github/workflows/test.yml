@@ -90,12 +90,14 @@ jobs:
           artifact-tag: ${{ steps.compat.outputs.ci_runtime }}
           bindings-path: modules/antono2/vulkan
       - name: Build the pinned GLFW library
-        run: v run modules/antono2/glfw/tools/build_native.vsh
+        run: v run modules/antono2/glfw/tools/build_native.vsh --work-dir "${{ runner.temp }}/GLFW with spaces"
       - name: Verify the public setup diagnostics
         working-directory: modules/antono2/glfw
         run: v run setup.vsh --check
       - name: Configure MSVC x64
         uses: antono2/vulkan/.github/actions/setup-msvc@23ec75dc6015776f3012880148ca90e66f63010a
+      - name: Qualify the current V toolchain with MSVC and spaced native paths
+        uses: antono2/vulkan/.github/actions/setup-v@1667d906b059ecc951f01c7cb20601d6b2b02b54
       - name: Test with the Microsoft C compiler
         working-directory: modules/antono2/glfw
         run: v run tools/platform_ci.vsh platform-checks

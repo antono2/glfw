@@ -41,6 +41,7 @@ fn platform_checks() ! {
 	}
 
 	compiler(['run', 'tools/generate.vsh', '--check'])!
+	compiler(['run', 'tools/test_flag_paths.vsh'])!
 	if platform != 'windows' {
 		compiler(['run', 'setup.vsh', '--check'])!
 	}
